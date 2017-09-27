@@ -1,0 +1,64 @@
+version: "2.0" # mistral version
+name: arteria-packs.archive_missing_files_irma
+description: Reuploads missing files from an archive on Irma to PDC with TSM
+
+workflows:
+    main:
+        type: direct
+        input:
+            - project
+        output:
+            output_the_whole_workflow_context: <% $ %>
+        task-defaults:
+            on-error:
+                - oh_shit_error
+
+        tasks:
+            ### GENERAL TASKS START ###
+            note_workflow_repo_version:
+              action: core.local
+              input:
+                cmd: git rev-parse HEAD
+                cwd: /opt/stackstorm/packs/arteria-packs/
+              on-success:
+                - get_config
+
+            get_config:
+              action: arteria-packs.get_pack_config
+              publish:
+                irma_archive_upload_base_url: <% task(get_config).result.result.irma_archive_upload_base_url %>
+                irma_api_key: <% task(get_config).result.result.irma_api_key %>
+              on-success:
+                - upload_missing_files_to_pdc
+
+            ### GENERAL TASKS END ###
+
+            ### TRANSFER FILES START ###
+            upload_missing_files_to_pdc:
+                action: arteria-packs.poll_status
+                input:
+                  url: <% $.irma_archive_upload_base_url %>/reupload/<% $.project %>_archive?apikey=<% $.irma_api_key %>
+                  verify_ssl_cert: False
+                  irma_mode: True
+                  timeout: 604800 # 1w worst-case timeout
+                on-success:
+                  - notify_finished
+            ## END TSM ARCHIVE TO PDC ##
+
+            ## NOTIFIER START ###
+            notify_finished:
+                action: core.sendmail
+                input:
+                    to: <% $.send_mail_to %>
+                    subject: "'[ARTERIA] - Finished archiving missing files for archive <% $.project %>_archive on Irma'"
+                    body: "Finished archiving missing files for <% $.project %>_archive on Irma."
+
+            oh_shit_error:
+                action: core.sendmail
+                input:
+                    to: <% $.send_mail_to %>
+                    subject: "'[ARTERIA] - OH SHIT ERROR occurred for archive <% $.project %>_archive on Irma'"
+                    body: "An oh shit error occurred while reuploading <% $.project %>_archive on Irma. Please investigate!"
+                on-complete:
+                  - fail
+            ### NOTIFIER END ###
