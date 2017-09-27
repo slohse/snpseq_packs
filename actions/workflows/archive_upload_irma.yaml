@@ -1,0 +1,85 @@
+version: "2.0" # mistral version
+name: arteria-packs.archive_upload_irma
+description: Archives a runfolder to PDC with TSM
+
+workflows:
+    main:
+        type: direct
+        input:
+            - project
+            - remove_previous_archive
+        output:
+            output_the_whole_workflow_context: <% $ %>
+        task-defaults:
+            on-error:
+                - oh_shit_error
+
+        tasks:
+            ### GENERAL TASKS START ###
+            note_workflow_repo_version:
+              action: core.local
+              input:
+                cmd: git rev-parse HEAD
+                cwd: /opt/stackstorm/packs/arteria-packs/
+              on-success:
+                - get_config
+
+            get_config:
+              action: arteria-packs.get_pack_config
+              publish:
+                irma_archive_upload_base_url: <% task(get_config).result.result.irma_archive_upload_base_url %>
+                irma_api_key: <% task(get_config).result.result.irma_api_key %>
+              on-success:
+                - create_archive_dir
+
+            ### GENERAL TASKS END ###
+
+            ### TRANSFER FILES START ###
+            create_archive_dir:
+              action: core.http
+              input:
+                url: <% $.irma_archive_upload_base_url %>/create_dir/<% $.project %>?apikey=<% $.irma_api_key %>
+                body: '{"remove": "<% $.remove_previous_archive %>"}'
+                method: "POST"
+              on-success:
+                - generate_checksums
+
+            generate_checksums:
+                action: arteria-packs.poll_status
+                input:
+                  url: <% $.irma_archive_upload_base_url %>/gen_checksums/<% $.project %>_archive?apikey=<% $.irma_api_key %>
+                  verify_ssl_cert: False
+                  irma_mode: True
+                  timeout: 86400 # 24 h timeout
+                on-success:
+                  - tsm_archive_to_pdc
+
+            tsm_archive_to_pdc:
+                action: arteria-packs.poll_status
+                input:
+                  url: <% $.irma_archive_upload_base_url %>/upload/<% $.project %>_archive?apikey=<% $.irma_api_key %>
+                  verify_ssl_cert: False
+                  irma_mode: True
+                  timeout: 604800 # 1w worst-case timeout
+                on-success:
+                  - notify_finished
+            ## END TSM ARCHIVE TO PDC ##
+
+            ## NOTIFIER START ###
+            notify_finished:
+                action: core.sendmail
+                input:
+                    to: <% $.send_mail_to %>
+                    subject: "'[ARTERIA] - Finished archiving project <% $.project %>'"
+                    body: "Finished archiving <% $.project %> from Irma."
+
+            oh_shit_error:
+                action: core.sendmail
+                input:
+                    to: <% $.send_mail_to %>
+                    subject: "'[ARTERIA] - OH SHIT ERROR occurred when archiving <% $.project %>'"
+                    body: "An oh shit error occurred while archiving <% $.project %> on host Irma. Please investigate!"
+                on-complete:
+                  - fail
+            ### NOTIFIER END ###
+                  

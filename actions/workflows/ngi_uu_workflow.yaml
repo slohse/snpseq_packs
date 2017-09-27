@@ -350,7 +350,7 @@ workflows:
 
             ## START TSM ARCHIVE TO PDC ##
             upload_runfolder_to_pdc:
-                action: arteria-packs.archive_workflow
+                action: arteria-packs.archive_upload
                 input:
                     runfolder: <% $.runfolder %>
                     host: <% $.host %>

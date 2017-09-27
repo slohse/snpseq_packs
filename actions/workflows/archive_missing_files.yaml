@@ -1,0 +1,64 @@
+version: "2.0" # mistral version
+name: arteria-packs.archive_missing_files
+description: Reuploads missing files from an archive to PDC with TSM
+
+workflows:
+    main:
+        type: direct
+        input:
+            - runfolder
+            - host
+        output:
+            output_the_whole_workflow_context: <% $ %>
+        task-defaults:
+            on-error:
+                - oh_shit_error
+
+        tasks:
+            ### GENERAL TASKS START ###
+            note_workflow_repo_version:
+              action: core.local
+              input:
+                cmd: git rev-parse HEAD
+                cwd: /opt/stackstorm/packs/arteria-packs/
+              on-success:
+                - get_config
+
+            get_config:
+              action: arteria-packs.get_pack_config
+              publish:
+                archive_upload_port: <% task(get_config).result.result.archive_upload_service_port %>
+              on-success:
+                - upload_missing_files_to_pdc
+
+            ### GENERAL TASKS END ###
+
+            ### TRANSFER FILES START ###
+            upload_missing_files_to_pdc:
+                action: arteria-packs.poll_status
+                input:
+                  url: http://<% $.host %>:<% $.archive_upload_port %>/api/1.0/reupload/<% $.runfolder %>_archive
+                  verify_ssl_cert: False
+                  irma_mode: False
+                  timeout: 604800 # 1w worst-case timeout
+                on-success:
+                  - notify_finished
+            ## END TSM ARCHIVE TO PDC ##
+
+            ## NOTIFIER START ###
+            notify_finished:
+                action: core.sendmail
+                input:
+                    to: <% $.send_mail_to %>
+                    subject: "'[ARTERIA] - Finished archiving missing files for archive <% $.runfolder %>_archive'"
+                    body: "Finished archiving missing files for <% $.runfolder %>_archive on <% $.host %>."
+
+            oh_shit_error:
+                action: core.sendmail
+                input:
+                    to: <% $.send_mail_to %>
+                    subject: "'[ARTERIA] - OH SHIT ERROR occurred when archiving missing files for <% $.runfolder %>_archive'"
+                    body: "An oh shit error occurred while reuploading <% $.runfolder %>_archive on host <% $.host %>. Please investigate!"
+                on-complete:
+                  - fail
+            ### NOTIFIER END ###
