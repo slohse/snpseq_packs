@@ -48,7 +48,7 @@ workflows:
                 action: arteria-packs.poll_status
                 input:
                   url: <% $.irma_archive_upload_base_url %>/gen_checksums/<% $.project %>_archive?apikey=<% $.irma_api_key %>
-                  verify_ssl_cert: False
+                  verify_ssl_cert: True
                   irma_mode: True
                   timeout: 86400 # 24 h timeout
                 on-success:
@@ -58,9 +58,9 @@ workflows:
                 action: arteria-packs.poll_status
                 input:
                   url: <% $.irma_archive_upload_base_url %>/upload/<% $.project %>_archive?apikey=<% $.irma_api_key %>
-                  verify_ssl_cert: False
+                  verify_ssl_cert: True
                   irma_mode: True
-                  timeout: 604800 # 1w worst-case timeout
+                  timeout: 86400 # 1d worst-case timeout
                 on-success:
                   - notify_finished
             ## END TSM ARCHIVE TO PDC ##

@@ -38,9 +38,9 @@ workflows:
                 action: arteria-packs.poll_status
                 input:
                   url: http://<% $.host %>:<% $.archive_upload_port %>/api/1.0/reupload/<% $.runfolder %>_archive
-                  verify_ssl_cert: False
+                  verify_ssl_cert: True
                   irma_mode: False
-                  timeout: 604800 # 1w worst-case timeout
+                  timeout: 86400 # 1d worst-case timeout
                 on-success:
                   - notify_finished
             ## END TSM ARCHIVE TO PDC ##
