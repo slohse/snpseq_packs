@@ -29,7 +29,7 @@ workflows:
               action: arteria-packs.get_pack_config
               publish:
                 archive_upload_port: <% task(get_config).result.result.archive_upload_service_port %>
-				archive_status_slack_channel: <% task(get_config).result.result.archive_status_slack_channel %>
+                archive_status_slack_channel: <% task(get_config).result.result.archive_status_slack_channel %>
               on-success:
                 - create_archive_dir
 

@@ -29,8 +29,8 @@ workflows:
               publish:
                 irma_archive_upload_base_url: <% task(get_config).result.result.irma_archive_upload_base_url %>
                 irma_api_key: <% task(get_config).result.result.irma_api_key %>
-				archive_status_slack_channel: <% task(get_config).result.result.archive_status_slack_channel %>
-				send_mail_to: <% task(get_config).result.result.send_mail_to %>
+                archive_status_slack_channel: <% task(get_config).result.result.archive_status_slack_channel %>
+                send_mail_to: <% task(get_config).result.result.send_mail_to %>
               on-success:
                 - create_archive_dir
 
