@@ -16,7 +16,6 @@ projman_connection_string: mssql+pymssql://<username>:<password>@<host>/<databas
 biotank_hosts: mm-xart002,mm-xart003
 biotank_user: arteria
 biotank_user_key: "/path/to/ssh/key"
-check_cert_slack_channel: "#bottest"
 
 remote_host: testuppmax
 remote_user: arteria
@@ -61,17 +60,11 @@ incoming_svc_urls:
 charon_api_token: dummy_token
 charon_base_url: http://charon.url
 slack_webhook_url: https://slack.webhook.url
-charon_status_report_slack_channel: "#bottest"
 
+charon_status_report_slack_channel: "#bottest"
+check_cert_slack_channel: "#bottest"
 delivery_workflow_status_slack_channel: '#bottest'
-# String of file paths to exclude from the compressed archive (egrep syntax)
-archive_excludes: "\"'^Config|^InterOp|^SampleSheet.csv|^Unaligned|^runParameters.xml|^RunInfo.xml\""
-# Which file entries we should not link to when creating the archive copy of the runfolder
-archive_exclude_links: "-e Data -e Thumbnail_Images"
-# Number of fastq files to expect when creating archive. If we find less files than this
-# then the action will fail.
-archive_fastq_threshold: 10
-archive_python_path: /opt/arteria/arteria-runfolder-env/bin/python
+archive_status_slack_channel: "#bottest"
 
 supr_api_user: apiuser
 supr_api_key: apikey

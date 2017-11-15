@@ -12,7 +12,7 @@ workflows:
             output_the_whole_workflow_context: <% $ %>
         task-defaults:
             on-error:
-                - oh_shit_error
+                - notify_failure_on_slack
 
         tasks:
             ### GENERAL TASKS START ###
@@ -28,6 +28,8 @@ workflows:
               action: arteria-packs.get_pack_config
               publish:
                 archive_upload_port: <% task(get_config).result.result.archive_upload_service_port %>
+                archive_status_slack_channel: <% task(get_config).result.result.archive_status_slack_channel %>
+                send_mail_to: <% task(get_config).result.result.send_mail_to %>
               on-success:
                 - upload_missing_files_to_pdc
 
@@ -53,12 +55,14 @@ workflows:
                     subject: "'[ARTERIA] - Finished archiving missing files for archive <% $.runfolder %>_archive'"
                     body: "Finished archiving missing files for <% $.runfolder %>_archive on <% $.host %>."
 
-            oh_shit_error:
-                action: core.sendmail
-                input:
-                    to: <% $.send_mail_to %>
-                    subject: "'[ARTERIA] - OH SHIT ERROR occurred when archiving missing files for <% $.runfolder %>_archive'"
-                    body: "An oh shit error occurred while reuploading <% $.runfolder %>_archive on host <% $.host %>. Please investigate!"
-                on-complete:
-                  - fail
+            notify_failure_on_slack:
+               action: arteria-packs.post_to_slack
+               input:
+                 user: 'I, Archivian'
+                 emoji_icon: ':robot_face:'
+                 channel: <% $.archive_status_slack_channel %>
+                 message: 'Unfortunately an error occurred when trying to archive missing files for `<% $.runfolder %>`. You can see more details by running: `st2 execution get <% env().st2_execution_id %>`'
+               on-complete:
+                 - fail
+
             ### NOTIFIER END ###
