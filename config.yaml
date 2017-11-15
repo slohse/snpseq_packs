@@ -13,7 +13,6 @@ summary_ngi_pipeline_reports_destination: /tmp/summaries/ngi_reports
 biotank_hosts: mm-xart002,mm-xart003
 biotank_user: arteria
 biotank_user_key: "/path/to/ssh/key"
-check_cert_slack_channel: "#bottest"
 
 remote_host: testuppmax
 remote_user: arteria
@@ -54,9 +53,11 @@ incoming_svc_urls:
 charon_api_token: dummy_token
 charon_base_url: http://charon.url
 slack_webhook_url: https://slack.webhook.url
-charon_status_report_slack_channel: "#bottest"
 
+charon_status_report_slack_channel: "#bottest"
+check_cert_slack_channel: "#bottest"
 delivery_workflow_status_slack_channel: '#bottest'
+archive_status_slack_channel: "#bottest"
 
 supr_api_user: apiuser
 supr_api_key: apikey

@@ -11,6 +11,9 @@ workflows:
             - remove_previous_archive
         output:
             output_the_whole_workflow_context: <% $ %>
+        task-defaults: 
+          on-error: 
+            - notify_failure_on_slack
 
         tasks:
             ### GENERAL TASKS START ###
@@ -26,6 +29,7 @@ workflows:
               action: arteria-packs.get_pack_config
               publish:
                 archive_upload_port: <% task(get_config).result.result.archive_upload_service_port %>
+				archive_status_slack_channel: <% task(get_config).result.result.archive_status_slack_channel %>
               on-success:
                 - create_archive_dir
 
@@ -69,3 +73,18 @@ workflows:
                   timeout: 86400 # 1d worst-case timeout
 
             ### TRANSFER FILES END ###
+
+            ## NOTIFIER START ###
+
+            notify_failure_on_slack:
+               action: arteria-packs.post_to_slack
+               input:
+                 user: 'I, Archivian'
+                 emoji_icon: ':robot_face:'
+                 channel: <% $.archive_status_slack_channel %>
+                 message: 'Unfortunately an error occurred when trying to archive `<% $.runfolder %>`. You can see more details by running: `st2 execution get <% env().st2_execution_id %>`'
+               on-complete:
+                 - fail
+
+            ### NOTIFIER END ###
+

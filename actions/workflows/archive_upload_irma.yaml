@@ -12,7 +12,7 @@ workflows:
             output_the_whole_workflow_context: <% $ %>
         task-defaults:
             on-error:
-                - oh_shit_error
+                - notify_failure_on_slack
 
         tasks:
             ### GENERAL TASKS START ###
@@ -29,6 +29,8 @@ workflows:
               publish:
                 irma_archive_upload_base_url: <% task(get_config).result.result.irma_archive_upload_base_url %>
                 irma_api_key: <% task(get_config).result.result.irma_api_key %>
+				archive_status_slack_channel: <% task(get_config).result.result.archive_status_slack_channel %>
+				send_mail_to: <% task(get_config).result.result.send_mail_to %>
               on-success:
                 - create_archive_dir
 
@@ -73,13 +75,15 @@ workflows:
                     subject: "'[ARTERIA] - Finished archiving project <% $.project %>'"
                     body: "Finished archiving <% $.project %> from Irma."
 
-            oh_shit_error:
-                action: core.sendmail
-                input:
-                    to: <% $.send_mail_to %>
-                    subject: "'[ARTERIA] - OH SHIT ERROR occurred when archiving <% $.project %>'"
-                    body: "An oh shit error occurred while archiving <% $.project %> on host Irma. Please investigate!"
-                on-complete:
-                  - fail
+            notify_failure_on_slack:
+               action: arteria-packs.post_to_slack
+               input:
+                 user: 'I, Archivian'
+                 emoji_icon: ':robot_face:'
+                 channel: <% $.archive_status_slack_channel %>
+                 message: 'Unfortunately an error occurred when trying to archive `<% $.project %>`. You can see more details by running: `st2 execution get <% env().st2_execution_id %>`'
+               on-complete:
+                 - fail
+
             ### NOTIFIER END ###
                   
