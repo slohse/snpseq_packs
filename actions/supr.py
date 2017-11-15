@@ -40,10 +40,13 @@ class Supr(Action):
     def search_for_pis(project_to_email_dict, supr_base_api_url, api_user, api_key):
         res = {}
         for project, project_info in project_to_email_dict.iteritems():
-            res[project] = Supr.search_by_email(base_url=supr_base_api_url,
-                                                email=project_info['email'],
-                                                user=api_user,
-                                                key=api_key)
+            res[project] = map(
+                lambda e: Supr.search_by_email(
+                    base_url=supr_base_api_url,
+                    email=e,
+                    user=api_user,
+                    key=api_key),
+                project_info['email'].split(','))
         return res
 
     @staticmethod
@@ -51,7 +54,8 @@ class Supr(Action):
 
         result = {}
         for ngi_project_name in staging_info.keys():
-            pi_id = project_names_and_ids[ngi_project_name]
+            pi_id = project_names_and_ids[ngi_project_name][0]
+            member_ids = project_names_and_ids[ngi_project_name][1:]
 
             create_delivery_project_url = '{}/ngi_delivery/project/create/'.format(base_url)
 
@@ -67,6 +71,7 @@ class Supr(Action):
                 'ngi_project_name': ngi_project_name,
                 'title': "DELIVERY_{}_{}".format(ngi_project_name, today_formatted),
                 'pi_id': pi_id,
+                'member_ids': member_ids,
                 'start_date': today_formatted,
                 'end_date': three_months_from_now_formatted,
                 'continuation_name': '',
