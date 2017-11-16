@@ -30,12 +30,14 @@ workflows:
                 archive_upload_port: <% task(get_config).result.result.archive_upload_service_port %>
                 archive_status_slack_channel: <% task(get_config).result.result.archive_status_slack_channel %>
                 send_mail_to: <% task(get_config).result.result.send_mail_to %>
+                archive_db_base_url: <% task(get_config).result.result.archive_db_base_url %>
               on-success:
                 - upload_missing_files_to_pdc
 
             ### GENERAL TASKS END ###
 
-            ### TRANSFER FILES START ###
+            ### TSM ARCHIVE TO PDC START ###
+
             upload_missing_files_to_pdc:
                 action: arteria-packs.poll_status
                 input:
@@ -43,11 +45,27 @@ workflows:
                   verify_ssl_cert: True
                   irma_mode: False
                   timeout: 86400 # 1d worst-case timeout
+                publish:
+                  archive_path: <% task(upload_archive).result.result.response_from_start.response.archive_path %>
+                  archive_description: <% task(upload_archive).result.result.response_from_start.response.archive_description %>
+                  archive_host: <% task(upload_archive).result.result.response_from_start.response.archive_host %>
+                on-success:
+                  - mark_upload_ok_in_db
+
+            mark_upload_ok_in_db:
+                action: core.http
+                input:
+                  url: <% $.archive_db_base_url %>/upload
+                  body: '{ "path":  "<% $.archive_path %>", "description": "<% archive_description %>", "host": "<% archive_host %>" }'
+                  method: "POST"
+                  timeout: 60
                 on-success:
                   - notify_finished
+
             ## END TSM ARCHIVE TO PDC ##
 
             ## NOTIFIER START ###
+
             notify_finished:
                 action: core.sendmail
                 input:
