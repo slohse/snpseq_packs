@@ -267,13 +267,15 @@ class ArteriaDeliveryService(Action):
                                                        staging_id=kwargs['staging_id'],
                                                        md5sum_file=kwargs.get('md5sum_file'),
                                                        skip_mover=skip_mover)
-            project_and_delivery_id.set_status(
-                project_and_delivery_id.mover_processing_delivery,
-                skip_mover=skip_mover)
-            exit_flag = True
+            if project_and_delivery_id:
+                exit_status = True
+                result = {'project_name': project_and_delivery_id.project,
+                          'delivery_id': project_and_delivery_id.delivery_id}
+            else:
+                exit_status = False
+                result = {}
 
-            return exit_flag, {'project_name': project_and_delivery_id.project,
-                               'delivery_id': project_and_delivery_id.delivery_id}
+            return exit_status, result
 
         elif action == "delivery_status":
 
