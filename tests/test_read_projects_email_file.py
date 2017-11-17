@@ -18,22 +18,6 @@ class ReadProjectsEmailFileTestCase(BaseActionTestCase):
                     "sensitive": True}
     }
 
-    class MockPostResponse:
-        def __init__(self, response_link):
-            self.response_link = response_link
-
-        def json(self):
-            return {'link': self.response_link}
-
-    class MockStatusResponse:
-        def __init__(self, state_list):
-            self.state_list = state_list
-
-        # Every time we get new json, pop it from the beginning
-        # of the list. This way we can vary state over time.
-        def json(self):
-            return {"state": self.state_list.pop(0)}
-
     @classmethod
     def setUpClass(cls):
         # write some content to a project email file
