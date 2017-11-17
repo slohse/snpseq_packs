@@ -267,13 +267,10 @@ class ArteriaDeliveryService(Action):
                                                        staging_id=kwargs['staging_id'],
                                                        md5sum_file=kwargs.get('md5sum_file'),
                                                        skip_mover=skip_mover)
-
-            # Wait a short time and then try to update the status, just to
-            # make sure we fail in this step if we get a failed status early.
-            time.sleep(5)
-            service.update_delivery_status(project_and_delivery_id, skip_mover=skip_mover)
-
-            exit_flag = project_and_delivery_id.is_in_progress(skip_mover)
+            project_and_delivery_id.set_status(
+                project_and_delivery_id.mover_processing_delivery,
+                skip_mover=skip_mover)
+            exit_flag = True
 
             return exit_flag, {'project_name': project_and_delivery_id.project,
                                'delivery_id': project_and_delivery_id.delivery_id}
