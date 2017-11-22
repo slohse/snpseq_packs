@@ -11,11 +11,11 @@ class ReadProjectsEmailFileTestCase(BaseActionTestCase):
 
     projects_email_file = None
     project_emails = {
-        "AA-0001": {"email": "this.is.a.pi@email.com", "sensitive": False},
-        "BB-0002": {"email": "this.is.a.pi@email.com", "sensitive": True},
-        "CC-0003": {"email": "this.is.a.pi@email.com,this.is.member.1@email.com", "sensitive": False},
-        "DD-0004": {"email": "this.is.a.pi@email.com,this.is.member.1@email.com,this.is.member.2@email.com",
-                    "sensitive": True}
+        "AA-0001": {"email": "this.is.a.pi@email.com", "sensitive": False, "members": []},
+        "BB-0002": {"email": "this.is.a.pi@email.com", "sensitive": True, "members": []},
+        "CC-0003": {"email": "this.is.a.pi@email.com", "sensitive": False, "members": ["this.is.member.1@email.com"]},
+        "DD-0004": {"email": "this.is.a.pi@email.com", "sensitive": True,
+                    "members": ["this.is.member.1@email.com", "this.is.member.2@email.com"]}
     }
 
     @classmethod
@@ -23,11 +23,12 @@ class ReadProjectsEmailFileTestCase(BaseActionTestCase):
         # write some content to a project email file
         fd, projects_email_file = tempfile.mkstemp(suffix=".csv", prefix="test_read_projects_email_file")
         with os.fdopen(fd) as csvh:
-            csv_writer = csv.DictWriter(csvh, delimiter=";", fieldnames=["project", "email", "sensitive"])
+            csv_writer = csv.DictWriter(csvh, delimiter=";", fieldnames=["project", "email", "members", "sensitive"])
             csv_writer.writeheader()
             for proj, email in cls.project_emails.items():
                 row = dict(email)
                 row["project"] = proj
+                row["members"] = ",".join(email["members"])
                 csv_writer.writerow(row)
         cls.projects_email_file = projects_email_file
 

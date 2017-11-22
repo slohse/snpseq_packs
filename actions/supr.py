@@ -37,16 +37,17 @@ class Supr(Action):
         return matches[0]["id"]
 
     @staticmethod
-    def search_for_pis(project_to_email_dict, supr_base_api_url, api_user, api_key):
+    def search_by_emails(base_url, emails, user, key):
+        return map(lambda email: Supr.search_by_email(base_url=base_url, email=email, user=user, key=key), emails)
+
+    @staticmethod
+    def search_for_pi_and_members(project_to_email_dict, supr_base_api_url, api_user, api_key):
         res = {}
         for project, project_info in project_to_email_dict.iteritems():
-            res[project] = map(
-                lambda e: Supr.search_by_email(
-                    base_url=supr_base_api_url,
-                    email=e,
-                    user=api_user,
-                    key=api_key),
-                project_info['email'].split(','))
+            res[project] = {"pi_id": Supr.search_by_email(
+                base_url=supr_base_api_url, email=project_info['email'], user=api_user, key=api_key),
+                            "member_ids": Supr.search_by_emails(
+                base_url=supr_base_api_url, emails=project_info['members'], user=api_user, key=api_key)}
         return res
 
     @staticmethod
@@ -54,8 +55,8 @@ class Supr(Action):
 
         result = {}
         for ngi_project_name in staging_info.keys():
-            pi_id = project_names_and_ids[ngi_project_name][0]
-            member_ids = project_names_and_ids[ngi_project_name][1:]
+            pi_id = project_names_and_ids[ngi_project_name]['pi_id']
+            member_ids = project_names_and_ids[ngi_project_name]['member_ids']
 
             create_delivery_project_url = '{}/ngi_delivery/project/create/'.format(base_url)
 

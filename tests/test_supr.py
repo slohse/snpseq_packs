@@ -18,11 +18,11 @@ class SuprTestCase(BaseActionTestCase):
         self.api_user = "this-is-the-api-user"
         self.api_key = "this-is-the-api-key"
         self.project_to_email_dict = {
-            "AA-0001": {"email": "this.is.a.pi@email.com", "sensitive": False},
-            "BB-0002": {"email": "this.is.a.pi@email.com", "sensitive": True},
-            "CC-0003": {"email": "this.is.a.pi@email.com,this.is.member.1@email.com", "sensitive": False},
-            "DD-0004": {"email": "this.is.a.pi@email.com,this.is.member.1@email.com,this.is.member.2@email.com",
-                        "sensitive": True}
+            "AA-0001": {"email": "this.is.a.pi@email.com", "sensitive": False, "members": []},
+            "BB-0002": {"email": "this.is.a.pi@email.com", "sensitive": True, "members": []},
+            "CC-0003": {"email": "this.is.a.pi@email.com", "sensitive": False, "members": ["this.is.member.1@email.com"]},
+            "DD-0004": {"email": "this.is.a.pi@email.com", "sensitive": True,
+                        "members": ["this.is.member.1@email.com", "this.is.member.2@email.com"]}
         }
         self.expected_project_pi_ids = self.project_pi_ids()
 
@@ -37,9 +37,10 @@ class SuprTestCase(BaseActionTestCase):
 
     def project_pi_ids(self):
         return {
-            proj: map(
-                lambda x: SuprTestCase.mock_pi_id(email=x),
-                proj_info["email"].split(","))
+            proj: {"pi_id": SuprTestCase.mock_pi_id(email=proj_info["email"]),
+                   "member_ids": map(
+                       lambda email: SuprTestCase.mock_pi_id(email=email),
+                       proj_info["members"])}
             for proj, proj_info in self.project_to_email_dict.items()
         }
 
@@ -65,8 +66,8 @@ class SuprTestCase(BaseActionTestCase):
             self.assertListEqual(sorted(observed_delivery_projects.keys()), sorted(staging_info.keys()))
             for proj in project_names_and_ids.keys():
                 observed_content = json.loads(observed_delivery_projects[proj])
-                self.assertEqual(observed_content["pi_id"], project_names_and_ids[proj][0])
-                self.assertListEqual(observed_content["member_ids"], project_names_and_ids[proj][1:])
+                self.assertEqual(observed_content["pi_id"], project_names_and_ids[proj]["pi_id"])
+                self.assertListEqual(observed_content["member_ids"], project_names_and_ids[proj]["member_ids"])
                 self.assertEqual(observed_content["ngi_sensitive_data"], project_info[proj]["sensitive"])
 
     def test_create_delivery_project_fail(self):
@@ -81,18 +82,21 @@ class SuprTestCase(BaseActionTestCase):
     def test_search_for_pis(self):
         with mock.patch.object(
                 supr.Supr, "search_by_email", side_effect=SuprTestCase.mock_pi_id) as search_mock:
-            observed_pi_ids = supr.Supr.search_for_pis(
+            observed_ids = supr.Supr.search_for_pi_and_members(
                 self.project_to_email_dict,
                 self.supr_base_url,
                 self.api_user,
                 self.api_key)
-            self.assertDictEqual(observed_pi_ids, self.expected_project_pi_ids)
+            self.assertDictEqual(observed_ids, self.expected_project_pi_ids)
             self.assertEqual(
                 search_mock.call_count,
-                sum((len(values) for values in self.expected_project_pi_ids.values())))
+                sum(
+                    [1
+                     for id_dict in self.expected_project_pi_ids.values()
+                     for values in [id_dict["pi_id"]] + id_dict["member_ids"]]))
             calls = [
                 mock.call(base_url=self.supr_base_url, email=email, user=self.api_user, key=self.api_key)
                 for project_info in self.project_to_email_dict.values()
-                for email in project_info["email"].split(",")
+                for email in [project_info["email"]] + project_info["members"]
             ]
             search_mock.assert_has_calls(calls, any_order=True)

@@ -23,9 +23,9 @@ class ReadProjectsEmailFile(Action):
             for row in reader:
                 project = row['project']
                 sensitive = self.str_to_bool(row['sensitive'])
+                members = [email.strip() for email in row.get('members', "").split(",") if len(email) > 0]
                 if project in projects_list:
-                    result[project] = {"email": row['email'],"sensitive": sensitive}
-                    
+                    result[project] = {"email": row['email'], "members": members, "sensitive": sensitive}
 
         if len(projects_list) == len(result.keys()):
             self.logger.info("Projects given and projects found in file did match...")
