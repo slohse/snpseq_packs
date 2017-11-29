@@ -11,6 +11,7 @@ summary_destination: /tmp/summaries/
 summary_ngi_pipeline_reports_destination: /tmp/summaries/ngi_reports
 
 projman_install_location: /path/to/projman_filler
+projman_connection_string: mssql+pymssql://<username>:<password>@<host>/<database>?charset=utf8
 
 biotank_hosts: mm-xart002,mm-xart003
 biotank_user: arteria

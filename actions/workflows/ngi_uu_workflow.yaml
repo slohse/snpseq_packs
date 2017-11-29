@@ -47,7 +47,7 @@ workflows:
                 summary_destination: <% task(get_config).result.result.summary_destination %>
                 summary_host_key: <% task(get_config).result.result.summary_host_key %>
                 projman_install_location: <% task(get_config).result.result.projman_install_location %>
-                projman_env_var: <% task(get_config).result.result.projman_env_var %>
+                projman_connection_string: <% task(get_config).result.result.projman_connection_string %>
                 siswrap_service_port: <% task(get_config).result.result.siswrap_service_port %>
                 bcl2fastq_service_port: <% task(get_config).result.result.bcl2fastq_service_port %>
                 runfolder_service_port: <% task(get_config).result.result.runfolder_service_port %>
@@ -243,7 +243,7 @@ workflows:
               input:
                 hosts: <% $.summary_host %>
                 username: <% $.summary_user %>
-                projman_env_var: "<% $.projman_env_var %>"
+                projman_connection_string: "<% $.projman_connection_string %>"
                 projman_install_location: "<% $.projman_install_location %>"
                 summary_destination: "<% $.summary_destination %>"
                 current_year: "<% $.current_year %>"

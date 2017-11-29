@@ -5,7 +5,7 @@
     enabled: true
     entry_point: ''
     parameters:
-      projman_env_var:
+      projman_connection_string:
         type: string
         required: true
         secret: true
@@ -22,5 +22,5 @@
         type: string
         required: true
       cmd:
-        default: 'export PROJMAN_DB={{projman_env_var}}; {{projman_install_location}} --force {{summary_destination}}/{{current_year}}/{{runfolder_name}}'
+        default: 'export PROJMAN_DB={{projman_connection_string}}; {{projman_install_location}} --force {{summary_destination}}/{{current_year}}/{{runfolder_name}}'
 
