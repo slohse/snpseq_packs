@@ -1,5 +1,5 @@
 ---
-name: archive_workflow
+name: archive_upload
 description: >
   Archives a runfolder to PDC with TSM
 enabled: true

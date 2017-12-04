@@ -1,5 +1,5 @@
 ---
-name: archive_workflow_irma
+name: archive_upload_irma
 description: >
   Archives a project on Irma to PDC with TSM
 enabled: true
