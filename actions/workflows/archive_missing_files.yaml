@@ -39,7 +39,7 @@ workflows:
             ### TSM ARCHIVE TO PDC START ###
 
             upload_missing_files_to_pdc:
-                action: arteria-packs.poll_status
+                action: arteria-packs.poll_status-archive
                 input:
                   url: http://<% $.host %>:<% $.archive_upload_port %>/api/1.0/reupload/<% $.runfolder %>_archive
                   verify_ssl_cert: True

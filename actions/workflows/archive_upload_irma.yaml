@@ -49,7 +49,7 @@ workflows:
                 - generate_checksums
 
             generate_checksums:
-                action: arteria-packs.poll_status
+                action: arteria-packs.poll_status-archive
                 input:
                   url: <% $.irma_archive_upload_base_url %>/gen_checksums/<% $.project %>_archive?apikey=<% $.irma_api_key %>
                   verify_ssl_cert: True
@@ -59,7 +59,7 @@ workflows:
                   - upload_archive
 
             upload_archive:
-                action: arteria-packs.poll_status
+                action: arteria-packs.poll_status-archive
                 input:
                   url: <% $.irma_archive_upload_base_url %>/upload/<% $.project %>_archive?apikey=<% $.irma_api_key %>
                   verify_ssl_cert: True
@@ -76,7 +76,7 @@ workflows:
                 action: core.http
                 input:
                   url: <% $.archive_db_base_url %>/upload
-                  body: '{ "path":  "<% $.archive_path %>", "description": "<% archive_description %>", "host": "<% archive_host %>" }'
+                  body: '{ "path":  "<% $.archive_path %>", "description": "<% $.archive_description %>", "host": "<% $.archive_host %>" }'
                   method: "POST"
                   timeout: 60
                 on-success:
