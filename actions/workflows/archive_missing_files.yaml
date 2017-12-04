@@ -46,9 +46,9 @@ workflows:
                   irma_mode: False
                   timeout: 86400 # 1d worst-case timeout
                 publish:
-                  archive_path: <% task(upload_archive).result.result.response_from_start.response.archive_path %>
-                  archive_description: <% task(upload_archive).result.result.response_from_start.response.archive_description %>
-                  archive_host: <% task(upload_archive).result.result.response_from_start.response.archive_host %>
+                  archive_path: <% task(upload_missing_files_to_pdc).result.result.response_from_start.response.archive_path %>
+                  archive_description: <% task(upload_missing_files_to_pdc).result.result.response_from_start.response.archive_description %>
+                  archive_host: <% task(upload_missing_files_to_pdc).result.result.response_from_start.response.archive_host %>
                 on-success:
                   - mark_upload_ok_in_db
 
