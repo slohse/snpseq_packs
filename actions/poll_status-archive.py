@@ -24,11 +24,14 @@ class PollStatus(Action):
     def query(self, url, verify_ssl_cert):
         try:
             resp = requests.get(url, verify=verify_ssl_cert)
+            resp.raise_for_status()
             return resp
         except RequestException as err:
             self.logger.error("An error was encountered when "
                               "querying url: {0},  {1}".format(url, err))
             raise err
+        except HTTPError as err:
+            self.logger.error("An error was encountered when querying the url {}: {}".format(url, err))            
 
     def post_to_endpoint(self, endpoint, body, irma_mode, verify_ssl_cert):
 
@@ -46,6 +49,7 @@ class PollStatus(Action):
 
         try:
             response = requests.post(endpoint, json=body, verify=verify_ssl_cert)
+            response.raise_for_status()
             response_json = response.json()
 
             if irma_mode:
