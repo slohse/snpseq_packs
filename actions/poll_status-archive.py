@@ -6,7 +6,7 @@ from urlparse import urlparse
 
 import requests
 
-from requests.exceptions import RequestException
+from requests.exceptions import RequestException, HTTPError
 
 # Needs to be run in a Stackstorm virtualenv
 from st2actions.runners.pythonrunner import Action
