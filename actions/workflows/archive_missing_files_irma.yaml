@@ -56,7 +56,7 @@ workflows:
                 action: core.http
                 input:
                   url: <% $.archive_db_base_url %>/upload
-                  body: '{ "path":  "<% $.archive_path %>", "description": "<% archive_description %>", "host": "<% archive_host %>" }'
+                  body: '{ "path":  "<% $.archive_path %>", "description": "<% $.archive_description %>", "host": "<% $.archive_host %>" }'
                   method: "POST"
                   timeout: 60
                 on-success:
