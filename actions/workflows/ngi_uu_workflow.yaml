@@ -15,7 +15,7 @@ workflows:
             - use_base_mask
             - bcl2fastq_additional_arguments
             - skip_archiving
-            - remove_previous_archive_dir  
+            - remove_previous_archive_dir
         output:
             output_the_whole_workflow_context: <% $ %>
         task-defaults:
@@ -45,6 +45,9 @@ workflows:
                 summary_host: <% task(get_config).result.result.summary_host %>
                 summary_user: <% task(get_config).result.result.summary_user %>
                 summary_destination: <% task(get_config).result.result.summary_destination %>
+                summary_host_key: <% task(get_config).result.result.summary_host_key %>
+                projman_install_location: <% task(get_config).result.result.projman_install_location %>
+                projman_connection_string: <% task(get_config).result.result.projman_connection_string %>
                 siswrap_service_port: <% task(get_config).result.result.siswrap_service_port %>
                 bcl2fastq_service_port: <% task(get_config).result.result.bcl2fastq_service_port %>
                 runfolder_service_port: <% task(get_config).result.result.runfolder_service_port %>
@@ -124,10 +127,10 @@ workflows:
                     url: "http://<% $.host %>:<% $.bcl2fastq_service_port %>/api/1.0/start/<% $.runfolder_name %>"
                     timeout: 86400 # Wait for 24 h before timing out.
                     body: <% $.bcl2fastq_body %>
-                on-success: 
+                on-success:
                     - save_bcl2fastq_version
 
-            save_bcl2fastq_version: 
+            save_bcl2fastq_version:
                 action: core.local
                 input:
                     cmd: ssh <% $.host %> "echo <% task(run_bcl2fastq).result.result.response_from_start.response.bcl2fastq_version %> > <% $.runfolder %>/bcl2fastq_version"
@@ -233,7 +236,21 @@ workflows:
                     destination: <% $.summary_destination %>/<% $.current_year %>
                     include_file: /etc/arteria/misc/summary.rsync
                 on-success:
-                    - check_hosts_to_rsync_to
+                    - run_projman_filler
+
+            run_projman_filler:
+              action: arteria-packs.run_projman_filler
+              input:
+                hosts: <% $.summary_host %>
+                username: <% $.summary_user %>
+                projman_connection_string: "<% $.projman_connection_string %>"
+                projman_install_location: "<% $.projman_install_location %>"
+                summary_destination: "<% $.summary_destination %>"
+                current_year: "<% $.current_year %>"
+                runfolder_name: "<% $.runfolder_name %>"
+                private_key: <% $.summary_host_key %>
+              on-success:
+                - check_hosts_to_rsync_to
 
             check_hosts_to_rsync_to:
                action: core.http
