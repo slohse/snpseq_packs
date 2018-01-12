@@ -18,11 +18,16 @@ class ProjectAndStageId(object):
 
     valid_states = [staging_successful, staging_failed, staging_pending, staging_in_progress]
 
-    def __init__(self, project, stage_id, size=None, status=None):
+    def __init__(self, project, stage_id, size=None, status=None, runfolders=None):
         self.project = project
         self.stage_id = stage_id
         self.status = status
         self.size = size
+        if not runfolders:
+            self.runfolders = []
+        else:
+            self.runfolders=runfolders
+
 
     def set_status(self, new_status):
         if new_status in self.valid_states:
@@ -123,9 +128,11 @@ class ArteriaDeliveryServiceHandler(object):
     @staticmethod
     def parse_stage_order_ids_from_response(response):
         projects_and_staging_order_ids = response['staging_order_ids']
+        staged_runfolders=list(map(lambda staged_path: staged_path.get('path',None), response['staged_data']))
+
         result = []
         for project, stage_order_id in projects_and_staging_order_ids.iteritems():
-            result.append(ProjectAndStageId(project, stage_order_id))
+            result.append(ProjectAndStageId(project, stage_order_id, runfolders=staged_runfolders))
 
         return result
 
@@ -223,10 +230,12 @@ class ArteriaDeliveryService(Action):
                 service.update_stage_size(project_and_stage_id)
                 result[project_and_stage_id.project] = {'size': project_and_stage_id.size,
                                                         'staging_id': project_and_stage_id.stage_id,
-                                                        'successful': True}
+                                                        'successful': True,
+                                                        'staged_data': project_and_stage_id.runfolders}
             else:
                 result[project_and_stage_id.project] = {'staging_id': project_and_stage_id.stage_id,
-                                                        'successful': False}
+                                                        'successful': False,
+                                                        'staged_data': project_and_stage_id.runfolders}
         return result
 
     def _await_and_parse_results(self, projects_and_stage_ids, service, sleep_time):
@@ -260,6 +269,7 @@ class ArteriaDeliveryService(Action):
             projects_and_stage_ids = service.stage_runfolders_for_project(project_name=kwargs['project_name'],
                                                                           mode=kwargs['mode'])
             return self._await_and_parse_results(projects_and_stage_ids, service, sleep_time)
+
         elif action == "deliver":
             skip_mover = kwargs.get('skip_mover')
             project_and_delivery_id = service.delivery(ngi_project_name=kwargs['ngi_project_name'],
