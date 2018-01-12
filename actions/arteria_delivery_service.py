@@ -26,7 +26,7 @@ class ProjectAndStageId(object):
         if not runfolders:
             self.runfolders = []
         else:
-            self.runfolders=runfolders
+            self.runfolders = runfolders
 
 
     def set_status(self, new_status):
@@ -128,7 +128,7 @@ class ArteriaDeliveryServiceHandler(object):
     @staticmethod
     def parse_stage_order_ids_from_response(response):
         projects_and_staging_order_ids = response['staging_order_ids']
-        staged_runfolders=list(map(lambda staged_path: staged_path.get('path',None), response['staged_data']))
+        staged_runfolders = list(map(lambda staged_path: staged_path.get('path',None), response['staged_data']))
 
         result = []
         for project, stage_order_id in projects_and_staging_order_ids.iteritems():
