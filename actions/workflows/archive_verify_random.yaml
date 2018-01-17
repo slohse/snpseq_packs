@@ -1,6 +1,6 @@
 version: "2.0" # mistral version
 name: arteria-packs.archive_verify_random
-description: Verify a randomly picked runfolder archive that was uploaded to PDC. Supposed to be run each week. Picks a runfolder that has not been verified previously, and was uploaded within the interval [1 week ago, yesterday].  
+description: Verify a randomly picked runfolder archive that was uploaded to PDC. Supposed to be run each week. Picks a runfolder that has not been verified previously, and was uploaded within the interval [1 week ago, yesterday].
 
 workflows:
     main:
@@ -35,23 +35,23 @@ workflows:
 
             ### TSM ARCHIVE VERIFY START ###
 
-            get_random_archive_to_verify: 
+            get_random_archive_to_verify:
               action: core.http
-              input: 
+              input:
                 url: <% $.archive_db_base_url %>/randomarchive
                 body: '{"safety_margin": "<% $.archive_safety_margin %>", "age": "<% $.archive_lookback_window %>"}'
-                method: "POST"
+                method: "GET"
                 timeout: 30
-              publish: 
+              publish:
                 archive_name: <% task(get_random_archive_to_verify).result.body.archive.archive %>
                 archive_host: <% task(get_random_archive_to_verify).result.body.archive.host %>
                 archive_description: <% task(get_random_archive_to_verify).result.body.archive.description %>
               on-success:
                 - verify_archive
 
-            verify_archive: 
+            verify_archive:
               action: arteria-packs.archive_verify_specific
-              input: 
+              input:
                 archive: <% $.archive_name %>
                 host: <% $.archive_host %>
                 description: <% $.archive_description %>
