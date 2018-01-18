@@ -1,4 +1,4 @@
----
+g--
 
 hermes_base_url: http://130.238.178.239:9000/api/0.1
 hermes_user: dummy_user
@@ -43,6 +43,7 @@ send_mail_to: example.mail.address@send.errors.to
 runfolder_service_port: 10800
 bcl2fastq_service_port: 10900
 siswrap_service_port: 10700
+checkqc_service_port: 11000
 
 # The service URL polled in the runfolder sensor:
 runfolder_svc_urls:
