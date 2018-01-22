@@ -14,6 +14,12 @@ class ArteriaDeliveryServiceTest(BaseActionTestCase):
         def __getitem__(self, key):
             return self.response_post[key]
 
+        def get(self, key, failobj=None):
+            if key not in self.response_post:
+                return failobj
+
+            return self.response_post[key]
+
     class MockGetResponse:
         def __init__(self, mock_response_get):
             self.response_get = mock_response_get
