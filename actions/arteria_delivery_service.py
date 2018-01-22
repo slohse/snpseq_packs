@@ -129,7 +129,7 @@ class ArteriaDeliveryServiceHandler(object):
     def parse_stage_order_ids_from_response(response):
         projects_and_staging_order_ids = response['staging_order_ids']
         staged_data = response.get('staged_data',None)
-        if staged_data is not None:
+        if staged_data:
             staged_runfolders = list(map(lambda staged_path: staged_path.get('path',None), staged_data))
         else:
             staged_runfolders = list()
