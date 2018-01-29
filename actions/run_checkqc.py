@@ -11,7 +11,7 @@ class runCheckQC(Action):
 
     def query(self, url, verify_ssl_cert):
         try:
-            response = requests.get(url, verify=verify_ssl_cert)
+            response = requests.get(url, verify = verify_ssl_cert)
             return response
         except RequestException as err:
             self.logger.error("An error was encountered when "

@@ -20,13 +20,13 @@ class runCheckQCTestCase(BaseActionTestCase):
 
         fake_url = 'http://foo.bar/qc'
 
-        with mock.patch.object(requests, 'get', return_value=self.MockGetResponse(mock_response)):
+        with mock.patch.object(requests, 'get', return_value = self.MockGetResponse(mock_response)):
 
             action = self.get_action_instance()
 
-            (exit_status, result) = action.run(url=fake_url,
-                                             ignore_result=ignore_result,
-                                             verify_ssl_cert=False)
+            (exit_status, result) = action.run(url = fake_url,
+                                               ignore_result = ignore_result,
+                                               verify_ssl_cert = False)
 
             self.assertTrue(exit_status == expected_exit_status)
 
@@ -43,7 +43,8 @@ class runCheckQCTestCase(BaseActionTestCase):
                                                            "error": "unknown",
                                                            "warning": 180}]},
                              "version": "1.2.0"}
-        self.run_checkqc(mock_response = mock_response, expected_exit_status = True, ignore_result = False)
+        self.run_checkqc(mock_response = mock_response,
+                         expected_exit_status = True, ignore_result = False)
 
     def test_error(self):
         mock_response = {"exit_status": 1,
@@ -58,7 +59,8 @@ class runCheckQCTestCase(BaseActionTestCase):
                                                            "error": 120,
                                                            "warning": 180}]},
                              "version": "1.2.0"}
-        self.run_checkqc(mock_response = mock_response, expected_exit_status = False, ignore_result = False)
+        self.run_checkqc(mock_response = mock_response,
+                         expected_exit_status = False, ignore_result = False)
 
     def test_error_ignore_result(self):
         mock_response = {"exit_status": 1,
@@ -73,5 +75,6 @@ class runCheckQCTestCase(BaseActionTestCase):
                                                            "error": 120,
                                                            "warning": 180}]},
                              "version": "1.2.0"}
-        self.run_checkqc(mock_response = mock_response, expected_exit_status = True, ignore_result = True)
+        self.run_checkqc(mock_response = mock_response,
+                         expected_exit_status = True, ignore_result = True)
 
