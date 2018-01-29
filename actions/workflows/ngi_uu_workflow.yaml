@@ -8,7 +8,7 @@ workflows:
         input:
             - host
             - runfolder
-            - ignore_sisyphus_qc_result
+            - ignore_qc_result
             - bcl2fastq_version
             - barcode_mismatches
             - tiles
@@ -144,7 +144,7 @@ workflows:
               action: arteria-packs.run_checkqc
               input:
                 url: "http://<% $.host %>:<% $.checkqc_service_port %>/qc/<% $.runfolder_name %>"
-                ignore_result: <% $.ignore_sisyphus_qc_result %>
+                ignore_result: <% $.ignore_qc_result %>
               on-success:
                 - run_sisyphus_check_indices
 
@@ -156,7 +156,7 @@ workflows:
                     url: "http://<% $.host %>:<% $.siswrap_service_port %>/api/1.0/checkindices/run/<% $.runfolder_name %>"
                     body:
                       runfolder: <% $.runfolder_name %>
-                    ignore_result: <% $.ignore_sisyphus_qc_result %>
+                    ignore_result: <% $.ignore_qc_result %>
                 on-success:
                     - get_year
             ### CHECK INDICES END###
