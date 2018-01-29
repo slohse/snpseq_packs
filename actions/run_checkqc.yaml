@@ -1,0 +1,21 @@
+---
+name: get_response
+runner_type: run-python
+description: Sends a request and returns the result
+enabled: true
+entry_point: get_response.py
+parameters:
+    url:
+        type: string
+        description: URL for the request
+        required: true
+    ignore_result:
+        type: boolean
+        description: Allows manually overriding the exitcode of the result, useful for e.g. overriding qc result checking.
+        required: false
+        default: false
+    verify_ssl_cert:
+        type: boolean
+        description: Verify the ssl cert if using https, default is true.
+        required: false
+        default: true
