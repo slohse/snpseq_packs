@@ -4,11 +4,11 @@ import requests
 
 from st2tests.base import BaseActionTestCase
 
-from run_checkqc import runCheckQC
+from run_checkqc import RunCheckQC
 
 
-class runCheckQCTestCase(BaseActionTestCase):
-    action_cls = runCheckQC
+class RunCheckQCTestCase(BaseActionTestCase):
+    action_cls = RunCheckQC
 
     class MockGetResponse:
         def __init__(self, mock_response):

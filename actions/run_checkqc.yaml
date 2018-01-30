@@ -1,9 +1,9 @@
 ---
-name: get_response
+name: run_checkqc
 runner_type: run-python
-description: Sends a request and returns the result
+description: Sends a qc request to the checkqc web service and returns the result
 enabled: true
-entry_point: get_response.py
+entry_point: run_checkqc.py
 parameters:
     url:
         type: string
