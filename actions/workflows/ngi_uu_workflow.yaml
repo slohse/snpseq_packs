@@ -8,7 +8,7 @@ workflows:
         input:
             - host
             - runfolder
-            - ignore_sisyphus_qc_result
+            - ignore_qc_result
             - bcl2fastq_version
             - barcode_mismatches
             - tiles
@@ -51,6 +51,7 @@ workflows:
                 siswrap_service_port: <% task(get_config).result.result.siswrap_service_port %>
                 bcl2fastq_service_port: <% task(get_config).result.result.bcl2fastq_service_port %>
                 runfolder_service_port: <% task(get_config).result.result.runfolder_service_port %>
+                checkqc_service_port: <% task(get_config).result.result.checkqc_service_port %>
                 send_mail_to: <% task(get_config).result.result.send_mail_to %>
                 remote_sisyphus_location: <% task(get_config).result.result.remote_sisyphus_location %>
                 irma_remote_path: <% task(get_config).result.result.irma_remote_path %>
@@ -135,40 +136,18 @@ workflows:
                 input:
                     cmd: ssh <% $.host %> "echo <% task(run_bcl2fastq).result.result.response_from_start.response.bcl2fastq_version %> > <% $.runfolder %>/bcl2fastq_version"
                 on-success:
-                    - download_sisyphus_config
+                    - run_checkqc
 
             ## DEMULTIPLEX END ###
-            ### QUICK REPORT START ###
-            download_sisyphus_config:
-                action: core.http
-                input:
-                    url: <% $.hermes_base_url %>/<% $.flowcell_name %>/configfile
-                    headers:
-                      USER: <% $.hermes_user %>
-                      X-XSRF-TOKEN: <% $.hermes_token %>
-                publish:
-                    sisyphus_conf_string: <% task(download_sisyphus_config).result.body.config %>
-                on-success:
-                    - construct_report_body
+            ### CHECKQC START ###
+            run_checkqc:
+              action: arteria-packs.run_checkqc
+              input:
+                url: "http://<% $.host %>:<% $.checkqc_service_port %>/qc/<% $.runfolder_name %>"
+                ignore_result: <% $.ignore_qc_result %>
+              on-success:
+                - run_sisyphus_check_indices
 
-            construct_report_body:
-                action: arteria-packs.parse_siswrap_args
-                input:
-                    runfolder: "<% $.runfolder_name %>"
-                    sisyphus_config: "<% $.sisyphus_conf_string %>"
-                publish:
-                    report_body: <% task(construct_report_body).result.result %>
-                on-success:
-                    - run_sisyphus_quick_report
-
-            run_sisyphus_quick_report:
-                action: arteria-packs.poll_status
-                input:
-                    url: "http://<% $.host %>:<% $.siswrap_service_port %>/api/1.0/report/run/<% $.runfolder_name %>"
-                    body: <% $.report_body %>
-                on-success:
-                    - run_sisyphus_check_indices
-            ### QUICK REPORT END ###
 
             ### CHECK INDICES START###
             run_sisyphus_check_indices:
@@ -177,44 +156,10 @@ workflows:
                     url: "http://<% $.host %>:<% $.siswrap_service_port %>/api/1.0/checkindices/run/<% $.runfolder_name %>"
                     body:
                       runfolder: <% $.runfolder_name %>
-                    ignore_result: <% $.ignore_sisyphus_qc_result %>
-                on-success:
-                    - download_qc_config
-            ### CHECK INDICES END###
-
-            ### QUALITY CONTROL START ###
-            download_qc_config:
-                action: core.http
-                input:
-                    url: <% $.hermes_base_url %>/<% $.flowcell_name %>/qcfile
-                    headers:
-                      USER: <% $.hermes_user %>
-                      X-XSRF-TOKEN: <% $.hermes_token %>
-                publish:
-                    qc_conf_string: <% task(download_qc_config).result.body.qc %>
-                on-success:
-                    - construct_qc_body
-
-            construct_qc_body:
-                action: arteria-packs.parse_siswrap_args
-                input:
-                    runfolder: "<% $.runfolder_name %>"
-                    qc_config: "<% $.qc_conf_string %>"
-                publish:
-                    qc_body: <% task(construct_qc_body).result.result %>
-                on-success:
-                    - run_sisyphus_qc
-
-            run_sisyphus_qc:
-                action: arteria-packs.poll_status
-                input:
-                    url: "http://<% $.host %>:<% $.siswrap_service_port %>/api/1.0/qc/run/<% $.runfolder_name %>"
-                    body: <% $.qc_body %>
-                    ignore_result: <% $.ignore_sisyphus_qc_result %>
+                    ignore_result: <% $.ignore_qc_result %>
                 on-success:
                     - get_year
-            ### QUALITY CONTROL END ###
-
+            ### CHECK INDICES END###
             ### TRANSFER FILES TO UPPMAX START ###
             get_year:
               action: core.local
