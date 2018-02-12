@@ -146,8 +146,19 @@ workflows:
                 url: "http://<% $.host %>:<% $.checkqc_service_port %>/qc/<% $.runfolder_name %>"
                 ignore_result: <% $.ignore_qc_result %>
               on-success:
-                - run_sisyphus_check_indices
+                - download_sisyphus_config
 
+            download_sisyphus_config:
+                action: core.http
+                input:
+                    url: <% $.hermes_base_url %>/<% $.flowcell_name %>/configfile
+                    headers:
+                      USER: <% $.hermes_user %>
+                      X-XSRF-TOKEN: <% $.hermes_token %>
+                publish:
+                    sisyphus_conf_string: <% task(download_sisyphus_config).result.body.config %>
+                on-success:
+                    - run_sisyphus_check_indices
 
             ### CHECK INDICES START###
             run_sisyphus_check_indices:
