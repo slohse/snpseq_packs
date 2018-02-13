@@ -61,6 +61,7 @@ workflows:
                 ngi_pipeline_url: <% task(get_config).result.result.ngi_pipeline_url %>
                 irma_replace_expressions: <% task(get_config).result.result.irma_replace_expressions %>
                 remote_host_key: <% task(get_config).result.result.remote_host_key %>
+                biotank_user_key: <% task(get_config).result.result.biotank_user_key %>
               on-success:
                  - mark_as_started
 
@@ -146,17 +147,14 @@ workflows:
                 url: "http://<% $.host %>:<% $.checkqc_service_port %>/qc/<% $.runfolder_name %>"
                 ignore_result: <% $.ignore_qc_result %>
               on-success:
-                - download_sisyphus_config
+                - copy_sisyphus_config
 
-            download_sisyphus_config:
-                action: core.http
+            copy_sisyphus_config:
+                action: core.remote
                 input:
-                    url: <% $.hermes_base_url %>/<% $.flowcell_name %>/configfile
-                    headers:
-                      USER: <% $.hermes_user %>
-                      X-XSRF-TOKEN: <% $.hermes_token %>
-                publish:
-                    sisyphus_conf_string: <% task(download_sisyphus_config).result.body.config %>
+                    cmd: "cp -v /opt/arteria/arteria-siswrap-env/deps/sisyphus/sisyphus-latest/sisyphus.yml <% $.runfolder %>/"
+                    hosts: <% $.host %>
+                    private_key: <% $.biotank_user_key %>
                 on-success:
                     - run_sisyphus_check_indices
 
