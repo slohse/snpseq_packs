@@ -52,7 +52,7 @@ workflows:
                input:
                  url: http://<% $.host %>:<% $.archive_upload_port %>/api/1.0/compress_archive/<% $.runfolder %>_archive
                  method: "POST"
-                 timeout: 3600 # 1 hr timeout
+                 timeout: 18000 # 5 hr timeout
                on-success:
                  - generate_checksums
 
