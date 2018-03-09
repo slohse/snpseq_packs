@@ -44,6 +44,7 @@ workflows:
                 url: http://<% $.host %>:<% $.archive_upload_port %>/api/1.0/create_dir/<% $.runfolder %>
                 body: '{"remove": "<% $.remove_previous_archive %>"}'
                 method: "POST"
+                timeout: 600 # 10 minutes timeout
               on-success:
                 - compress_tsm_archive
 
