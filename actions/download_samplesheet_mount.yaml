@@ -1,0 +1,16 @@
+---
+name: "download_samplesheet_mount"
+runner_type: "python-script"
+description: "Reads samplesheets from a mount on the Stackstorm server as fallback to the Clarity LIMS, keyed on flowcell id"
+enabled: true
+entry_point: "download_samplesheet_mount.py"
+pack: "arteria-packs"
+parameters:
+  flowcell_name:
+    type: "string"
+    description: "Name of the flowcell used to look up the samplesheet in the Clarity LIMS"
+    required: true
+  samplesheet_path:
+    type: "string"
+    description: "The path to the directory containing samplesheet files"
+    required: true
