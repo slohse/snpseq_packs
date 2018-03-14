@@ -50,7 +50,6 @@ class DownloadSamplesheetClarity(Action):
             # samplesheet file can be both single file and zip file with names like 92-102630_HH7LMCCXY_samplesheet.csv in archive.
             if zipfile.is_zipfile(samplesheet_file):
                 #extract appropriate zip member
-                print "Is a zip"
                 zf = zipfile.ZipFile(samplesheet_file, 'r')
                 zipped_files = zf.namelist()
                 flowcell_pattern = re.compile('_' + flowcell_name + '_samplesheet')
@@ -66,7 +65,6 @@ class DownloadSamplesheetClarity(Action):
                     samplesheet = zf.read(matching_files[0])
 
             else:
-                print "Nope, not a zip"
                 samplesheet = samplesheet_file.read()
 
         except IOError as err:
