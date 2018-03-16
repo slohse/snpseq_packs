@@ -45,6 +45,7 @@ workflows:
                 url: <% $.irma_archive_upload_base_url %>/create_dir/<% $.project %>?apikey=<% $.irma_api_key %>
                 body: '{"remove": "<% $.remove_previous_archive %>"}'
                 method: "POST"
+                timeout: 86400 # 24 h timeout
               on-success:
                 - generate_checksums
 
