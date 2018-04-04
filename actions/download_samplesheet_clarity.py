@@ -65,6 +65,7 @@ class DownloadSamplesheetClarity(Action):
                     samplesheet = zf.read(matching_files[0])
 
             else:
+                samplesheet_file.seek(0)
                 samplesheet = samplesheet_file.read()
 
         except IOError as err:
