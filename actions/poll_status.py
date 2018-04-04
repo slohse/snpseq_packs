@@ -6,7 +6,7 @@ from urlparse import urlparse
 
 import requests
 
-from requests.exceptions import RequestException
+from requests.exceptions import RequestException, HTTPError
 
 # Needs to be run in a Stackstorm virtualenv
 from st2actions.runners.pythonrunner import Action
@@ -24,11 +24,14 @@ class PollStatus(Action):
     def query(self, url, verify_ssl_cert):
         try:
             resp = requests.get(url, verify=verify_ssl_cert)
+            resp.raise_for_status()
             return resp
         except RequestException as err:
             self.logger.error("An error was encountered when "
                               "querying url: {0},  {1}".format(url, err))
             raise err
+        except HTTPError as err:
+            self.logger.error("An error was encountered when querying the url {}: {}".format(url, err))
 
     def post_to_endpoint(self, endpoint, body, irma_mode, verify_ssl_cert):
 
@@ -46,6 +49,7 @@ class PollStatus(Action):
 
         try:
             response = requests.post(endpoint, json=body, verify=verify_ssl_cert)
+            response.raise_for_status()
             response_json = response.json()
 
             if irma_mode:
@@ -54,6 +58,8 @@ class PollStatus(Action):
                 return {"response": response_json, "url": modified_link}
             else:
                 return {"response": response_json, "url": response_json['link']}
+        except HTTPError as err:
+            self.logger.error("An error was encountered when trying to post to url {}: {}".format(endpoint, err))
         except RequestException as err:
             self.logger.error("An error was encountered when trying to "
                                 "post to url: {0}, {1}".format(endpoint, err))
@@ -125,9 +131,8 @@ class PollStatus(Action):
                 return False, json_resp
 
     def run(self, url, body, sleep, ignore_result, irma_mode, verify_ssl_cert, max_retries=3):
-        start_response = self.post_to_endpoint(url, body, irma_mode, verify_ssl_cert) 
+        start_response = self.post_to_endpoint(url, body, irma_mode, verify_ssl_cert)
         status_link = start_response['url']
         status_val, status_response = self.check_status(status_link, sleep, ignore_result, verify_ssl_cert, max_retries)
         return status_val, { "response_from_start": start_response, "response_from_last_status_check": status_response }
-
 
