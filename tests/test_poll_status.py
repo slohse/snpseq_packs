@@ -29,6 +29,9 @@ class PollStatusTestCase(BaseActionTestCase):
         def json(self):
             return {"state": self.state_list.pop(0)}
 
+        def raise_for_status(self):
+            return
+
     def run_with_state(self, post_state, state, expected_exit_status, ignore_results=False):
 
         fake_url = 'http://foo.bar/post'
