@@ -12,7 +12,11 @@ pip install --upgrade pip
 pip install -r requirements.txt
 pip install -r requirements-test.txt
 
-python --version
+# Install the latest Tornado version that fulfills StackStorms
+# requirements (>3.2) but does not fail due to Tornado's requirement
+# of a python version with "an up-to-date SSL module"
+# this means Tornado < 5.0.0
+pip install tornado==4.5.3
 
 # Checkout and install st2 requirements
 git clone https://github.com/StackStorm/st2.git --depth 1 --single-branch --branch v$(cat utils/st2.version.txt) ./st2
