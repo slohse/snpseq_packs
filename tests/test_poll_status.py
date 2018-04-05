@@ -17,6 +17,9 @@ class PollStatusTestCase(BaseActionTestCase):
         def json(self):
             return {'link': self.response_link}
 
+        def raise_for_status(self):
+            return
+
     class MockStatusResponse:
         def __init__(self, state_list):
             self.state_list = state_list
