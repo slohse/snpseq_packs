@@ -101,7 +101,7 @@ workflows:
                     samplesheet_string: "<% task(download_samplesheet_clarity).result.result %>"
                 on-error:
                     - download_samplesheet_mount
-                on-sucess:
+                on-success:
                     - construct_bcl2fastq_body
 
             download_samplesheet_mount:
