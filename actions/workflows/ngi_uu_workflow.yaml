@@ -86,7 +86,7 @@ workflows:
                 publish:
                     flowcell_name: <% task(get_flowcell_name).result.result %>
                 on-success:
-                    - download_samplesheet
+                    - download_samplesheet_clarity
 
             ### GENERAL TASKS END ###
             ### DEMULTIPLEX START ###
