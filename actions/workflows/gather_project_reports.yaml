@@ -1,6 +1,6 @@
 version: "2.0" # mistral version
-name: arteria-packs.fill_projman
-description: Downloads summary statistics data from irma and fills the projman database.
+name: arteria-packs.gather_project_reports
+description: Downloads summary statistics data from irma.
 
 workflows:
     main:
@@ -69,32 +69,3 @@ workflows:
                 private_key: <% $.summary_host_key %>
                 timeout: 18000 # 5 h timeout
               concurrency: 5
-              on-complete:
-                - check_reports_old_enough
-
-            check_reports_old_enough:
-              action: arteria-packs.check_summary_report_modtime
-              input:
-                directory: <% $.summary_destination %>/<% $.current_year %>/
-                username: <% $.summary_user %>
-                hosts: <% $.summary_host %>
-                private_key: <% $.summary_host_key %>
-                # Require the summary report file to be at least 20 min old.
-                # This avoids trying to read a report into the db
-                # for which the report job has not yet been finished.
-                modtime: 1200
-              publish:
-                filtered_runfolders: <% task(check_reports_old_enough).result.get($.summary_host).stdout %>
-              on-success:
-                - load_data_into_projman
-
-            load_data_into_projman:
-              action: core.remote
-              with-items: ready_runfolder in <% $.filtered_runfolders %>
-              input:
-                cmd: /home/seqsum/ProjMan/readResults.pl <% $.summary_destination %>/<% $.current_year %>/<% $.ready_runfolder %>/
-                cwd: /home/seqsum
-                username: <% $.summary_user %>
-                hosts: <% $.summary_host %>
-                private_key: <% $.summary_host_key %>
-

@@ -1,9 +1,9 @@
 ---
-name: fill_projman
-description: Fill the ProjMan database with QC data
+name: gather_project_reports
+description: Sync project reports from Irma to the summary host
 enabled: true
 runner_type: mistral-v2
-entry_point: workflows/fill_projman.yaml
+entry_point: workflows/gather_project_reports.yaml
 pack: arteria-packs
 parameters:
   context:
@@ -11,7 +11,7 @@ parameters:
     immutable: true
     type: object
   workflow:
-    default: arteria-packs.fill_projman
+    default: arteria-packs.gather_project_reports
     immutable: true
     type: string
   year:

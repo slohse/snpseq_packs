@@ -79,6 +79,7 @@ workflows:
                  sleep_time: <% $.sleep_time %>
                  irma_api_key: <% $.irma_api_key %>
                  force_delivery: <% $.force_delivery %>
+                 timeout: 172800    
               publish:
                  projects_and_stage_ids: <% task(stage_project).result.result %>
               on-success:
