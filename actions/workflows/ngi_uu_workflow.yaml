@@ -91,7 +91,8 @@ workflows:
                 publish:
                     flowcell_name: <% task(get_flowcell_name).result.result %>
                 on-success:
-                    - download_samplesheet_mount
+                    - download_samplesheet_mount: <% $.skip_download_samplesheet_mount = false %>
+                    - download_samplesheet_clarity: <% $.skip_download_samplesheet_mount = true %>
 
             ### GENERAL TASKS END ###
             ### DEMULTIPLEX START ###
