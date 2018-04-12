@@ -58,4 +58,4 @@ parameters:
   skip_download_samplesheet_mount:
     default: false
     type: boolean
-    description: "Set to true to use a samplesheet from Clarity LIMS, even if one is present on the samplesheet/processning network share"
+    description: "Set to true to use a samplesheet from Clarity LIMS when one is present on the samplesheet/processning network share (otherwise the share will take precedence)"
