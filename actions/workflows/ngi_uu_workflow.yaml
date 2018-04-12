@@ -91,32 +91,31 @@ workflows:
                 publish:
                     flowcell_name: <% task(get_flowcell_name).result.result %>
                 on-success:
-                    - download_samplesheet_clarity
+                    - download_samplesheet_mount
 
             ### GENERAL TASKS END ###
             ### DEMULTIPLEX START ###
-
-            download_samplesheet_clarity:
-                action: arteria-packs.download_samplesheet_clarity
-                input:
-                    flowcell_name: <% $.flowcell_name %>
-
-                    #Add parameter for server or use dev/prod file based authentication/server selection?
-                publish:
-                    samplesheet_string: "<% task(download_samplesheet_clarity).result.result %>"
-                on-error:
-                    - download_samplesheet_mount
-                on-success:
-                    - construct_bcl2fastq_body
 
             download_samplesheet_mount:
                 action: arteria-packs.download_samplesheet_mount
                 input:
                     flowcell_name: <% $.flowcell_name %>
                     samplesheet_path: <% $.samplesheet_fallback_path %>
- 
                 publish:
                     samplesheet_string: "<% task(download_samplesheet_mount).result.result %>"
+                on-error:
+                    - download_samplesheet_clarity
+                on-success:
+                    - construct_bcl2fastq_body
+
+            download_samplesheet_clarity:
+                action: arteria-packs.download_samplesheet_clarity
+                input:
+                    flowcell_name: <% $.flowcell_name %>
+                
+                #Add parameter for server or use dev/prod file based authentication/server selection?
+                publish:
+                    samplesheet_string: "<% task(download_samplesheet_clarity).result.result %>"
                 on-success:
                     - construct_bcl2fastq_body
 
