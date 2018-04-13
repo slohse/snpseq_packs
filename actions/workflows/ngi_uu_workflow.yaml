@@ -16,6 +16,7 @@ workflows:
             - bcl2fastq_additional_arguments
             - skip_archiving
             - remove_previous_archive_dir
+            - skip_download_samplesheet_mount
         output:
             output_the_whole_workflow_context: <% $ %>
         task-defaults:
