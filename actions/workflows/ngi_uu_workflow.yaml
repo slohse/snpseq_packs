@@ -182,8 +182,8 @@ workflows:
                       runfolder: <% $.runfolder_name %>
                     ignore_result: <% $.ignore_qc_result %>
                 on-success:
-                    - get_year: <% task(run_checkqc).status = "succeeded"  %>
-                    - oh_shit_error: <% task(run_checkqc).status != "succeeded" %>
+                    - get_year: <% task(run_checkqc).state = "SUCCESS"  %>
+                    - oh_shit_error: <% task(run_checkqc).state != "SUCCESS" %>
             ### CHECK INDICES END###
             ### TRANSFER FILES TO UPPMAX START ###
             get_year:
