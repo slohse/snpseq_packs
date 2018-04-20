@@ -37,6 +37,6 @@ class RunCheckQC(Action):
         except ValueError:
             if ignore_result:
                 self.logger.warning("Ignoring the failed result because of override flag.")
-                return True, response
+                return True
             else:
-                return False, response
+                return False
