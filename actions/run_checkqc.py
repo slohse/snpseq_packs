@@ -17,14 +17,26 @@ class RunCheckQC(Action):
             self.logger.error("An error was encountered when "
                               "querying url: {0},  {1}".format(url, err))
             raise err
+        except ValueError as err:
+            self.logger.error("An error was encountered when "
+                              "querying url: {0},  {1}".format(url, err))
+            raise err
 
     def run(self, url, ignore_result, verify_ssl_cert):
-        response = self.query(url, verify_ssl_cert).json()
-        exit_status = response["exit_status"]
-        if (ignore_result and exit_status != 0):
-            self.logger.warning("Ignoring the failed result because of override flag.")
-            return True, response
-        elif exit_status == 0:
-            return True, response
-        else:
-            return False, response
+        try:
+            response = self.query(url, verify_ssl_cert).json()
+            exit_status = response["exit_status"]
+            if ignore_result:
+                self.logger.warning("Ignoring the failed result because of override flag.")
+                return True, response
+            elif exit_status == 0:
+                return True, response
+            else:
+                self.logger.error("Exit status was not 0!")
+                return False, response
+        except ValueError:
+            if ignore_result:
+                self.logger.warning("Ignoring the failed result because of override flag.")
+                return True, response
+            else:
+                return False, response
