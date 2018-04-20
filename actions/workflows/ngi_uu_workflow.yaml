@@ -16,6 +16,7 @@ workflows:
             - bcl2fastq_additional_arguments
             - skip_archiving
             - remove_previous_archive_dir
+            - skip_download_samplesheet_mount
         output:
             output_the_whole_workflow_context: <% $ %>
         task-defaults:
@@ -62,6 +63,7 @@ workflows:
                 irma_replace_expressions: <% task(get_config).result.result.irma_replace_expressions %>
                 remote_host_key: <% task(get_config).result.result.remote_host_key %>
                 biotank_user_key: <% task(get_config).result.result.biotank_user_key %>
+                samplesheet_fallback_path: <% task(get_config).result.result.samplesheet_fallback_path %>
               on-success:
                  - mark_as_started
 
@@ -90,19 +92,32 @@ workflows:
                 publish:
                     flowcell_name: <% task(get_flowcell_name).result.result %>
                 on-success:
-                    - download_samplesheet
+                    - download_samplesheet_mount: <% $.skip_download_samplesheet_mount = false %>
+                    - download_samplesheet_clarity: <% $.skip_download_samplesheet_mount = true %>
 
             ### GENERAL TASKS END ###
             ### DEMULTIPLEX START ###
-            download_samplesheet:
-                action: core.http
+
+            download_samplesheet_mount:
+                action: arteria-packs.download_samplesheet_mount
                 input:
-                    url: <% $.hermes_base_url %>/<% $.flowcell_name %>/samplesheetfile
-                    headers:
-                        USER: <% $.hermes_user %>
-                        X-XSRF-TOKEN: <% $.hermes_token %>
+                    flowcell_name: <% $.flowcell_name %>
+                    samplesheet_path: <% $.samplesheet_fallback_path %>
                 publish:
-                    samplesheet_string: <% task(download_samplesheet).result.body.samplesheet %>
+                    samplesheet_string: "<% task(download_samplesheet_mount).result.result %>"
+                on-error:
+                    - download_samplesheet_clarity
+                on-success:
+                    - construct_bcl2fastq_body
+
+            download_samplesheet_clarity:
+                action: arteria-packs.download_samplesheet_clarity
+                input:
+                    flowcell_name: <% $.flowcell_name %>
+                
+                #Add parameter for server or use dev/prod file based authentication/server selection?
+                publish:
+                    samplesheet_string: "<% task(download_samplesheet_clarity).result.result %>"
                 on-success:
                     - construct_bcl2fastq_body
 
