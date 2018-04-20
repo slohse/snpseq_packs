@@ -159,9 +159,9 @@ workflows:
               input:
                 url: "http://<% $.host %>:<% $.checkqc_service_port %>/qc/<% $.runfolder_name %>"
                 ignore_result: <% $.ignore_qc_result %>
-              publish:
-                run_check_qc_exit_flag: <% task(run_checkqc).result.exit_code %>
-              on-complete:
+              on-success:
+                - copy_sisyphus_config
+              on-error:
                 - copy_sisyphus_config
 
             copy_sisyphus_config:
@@ -183,7 +183,8 @@ workflows:
                     ignore_result: <% $.ignore_qc_result %>
                 on-success:
                     - get_year: <% task(run_checkqc).state = 'SUCCESS'  %>
-                    - oh_shit_error: <% task(run_checkqc).state != 'SUCCESS' %>
+                    - oh_shit_error: <% task(run_checkqc).state = 'ERROR' %>
+                    - mark_as_failed: <% task(run_checkqc).state = 'ERROR' %>
             ### CHECK INDICES END###
             ### TRANSFER FILES TO UPPMAX START ###
             get_year:
