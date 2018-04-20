@@ -34,9 +34,9 @@ class RunCheckQC(Action):
             else:
                 self.logger.error("Exit status was not 0!")
                 return False, response
-        except ValueError:
+        except ValueError as e:
             if ignore_result:
                 self.logger.warning("Ignoring the failed result because of override flag.")
-                return True
+                return True, "Ignored this error: {0}".format(e)
             else:
-                return False
+                return False, "Found this error: {0}".format(e)
