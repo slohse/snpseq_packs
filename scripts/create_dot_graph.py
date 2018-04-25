@@ -5,7 +5,7 @@ import argparse
 from graphviz import Digraph
 
 
-def add_edges(dot, look_up_key, task_name, task):
+def add_edges(dot, look_up_key, task_name, task, label=None):
     on_success_key = look_up_key
     if on_success_key not in task:
         pass
@@ -19,18 +19,24 @@ def add_edges(dot, look_up_key, task_name, task):
                 for key in elem:
                     dot.edge(task_name, key, label=elem[key])
             else:
-                dot.edge(task_name, elem)
+                dot.edge(task_name, elem, label=label)
 
 
 def add_success_edges(dot, task_name, task):
-    add_edges(dot, "on-success", task_name, task)
+    add_edges(dot, "on-success", task_name, task, label="on-success")
 
 
 def add_error_edges(dot, task_name, task):
-    add_edges(dot, "on-error", task_name, task)
+    add_edges(dot, "on-error", task_name, task, label="on-failure")
+
+
+def add_on_complete_edges(dot, task_name, task):
+    add_edges(dot, "on-complete", task_name, task, label="on-complete")
 
 
 def main(argv):
+
+    print("Generating graph...")
 
     parser = argparse.ArgumentParser(description='Create a dot representation of the give mistral workflow file')
     parser.add_argument('--file', required=True, help='Path to workflow file')
@@ -50,6 +56,7 @@ def main(argv):
         dot.node(key)
         add_success_edges(dot, key, task)
         add_error_edges(dot, key, task)
+        add_on_complete_edges(dot, key, task)
 
     dot.render(args.output)
 
