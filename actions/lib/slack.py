@@ -1,9 +1,7 @@
 
 import requests
-
-import datetime
-
 from st2actions.runners.pythonrunner import Action
+
 
 class SlackNotifier():
 
@@ -20,6 +18,7 @@ class SlackNotifier():
 
     def _post_to_slack(self, json_message):
         response = self.session.post(self.base_url, json=json_message)
+        response.raise_for_status()
         return response.status_code
 
     def post_message(self, message):
@@ -52,13 +51,7 @@ class SlackPoster(Action):
                                  user=user,
                                  icon_emoji=kwargs.get('emoji_icon'))
         try:
-            status = notifier.post_message(message)
-            if status == 200:
-                return True
-            else:
-                return False
+            notifier.post_message(message)
         except Exception as e:
             self.logger.error("Got error when trying to post to Slack: {}".format(e))
-            return False
-
-
+            raise
