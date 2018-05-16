@@ -230,7 +230,7 @@ workflows:
                     runfolder_name: <% $.runfolder_name %>
                     source_host: <% $.host %>
                     source_user: "arteria"
-                    destination_host: "irma4.uppmax.uu.se"
+                    destination_host: "irma2.uppmax.uu.se"
                     destination_user: "funk_901"
                     destination_path: <% $.irma_remote_path %>
                     rsync_include_file: /etc/arteria/misc/hiseq.rsync
@@ -289,26 +289,15 @@ workflows:
             ## START TSM ARCHIVE TO PDC ##
 
             upload_runfolder_to_pdc:
-                action: arteria-packs.archive_workflow
+                action: arteria-packs.archive_upload
                 input:
-                    runfolder: <% $.runfolder %>
+                    runfolder: <% $.runfolder_name %>
                     host: <% $.host %>
                     remove_previous_archive: <% $.remove_previous_archive_dir %>
                 on-success:
                   - notify_finished
                   - mark_as_finished
 
-# TODO Add this back to switch to the new archiving workflow that we have
-#      disabled for now. /JD 2018-04-25
-#            upload_runfolder_to_pdc:
-#                action: arteria-packs.archive_upload
-#                input:
-#                    runfolder: <% $.runfolder_name %>
-#                    host: <% $.host %>
-#                    remove_previous_archive: <% $.remove_previous_archive_dir %>
-#                on-success:
-#                  - notify_finished
-#                  - mark_as_finished
             ## END TSM ARCHIVE TO PDC ##
 
             ## NOTIFIER START ###
