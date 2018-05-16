@@ -230,7 +230,7 @@ workflows:
                     runfolder_name: <% $.runfolder_name %>
                     source_host: <% $.host %>
                     source_user: "arteria"
-                    destination_host: "irma4.uppmax.uu.se"
+                    destination_host: "irma2.uppmax.uu.se"
                     destination_user: "funk_901"
                     destination_path: <% $.irma_remote_path %>
                     rsync_include_file: /etc/arteria/misc/hiseq.rsync
