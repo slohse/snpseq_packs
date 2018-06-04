@@ -27,3 +27,7 @@ parameters:
     description: 'Unique description used when uploading archive to PDC'
     required: true
     type: string
+  path:
+    description: 'Full path to the archive on PDC. If not specified, the path will be guessed from host and archive'
+    required: false
+    type: string

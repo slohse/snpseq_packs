@@ -9,6 +9,7 @@ workflows:
             - archive
             - description
             - host
+            - path
         output:
             output_the_whole_workflow_context: <% $ %>
         task-defaults:
@@ -44,6 +45,7 @@ workflows:
                 archive: <% $.archive %>
                 description: <% $.description %>
                 host: <% $.host %>
+                path: <% $.path %>
               publish:
                 verify_body: <% task(construct_poller_body).result.result %>
               on-success:
