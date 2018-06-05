@@ -46,6 +46,7 @@ workflows:
                 archive_name: <% task(get_random_archive_to_verify).result.body.archive.archive %>
                 archive_host: <% task(get_random_archive_to_verify).result.body.archive.host %>
                 archive_description: <% task(get_random_archive_to_verify).result.body.archive.description %>
+                archive_path: <% task(get_random_archive_to_verify).result.body.archive.path %>
               on-success:
                 - verify_archive
 
@@ -55,6 +56,7 @@ workflows:
                 archive: <% $.archive_name %>
                 host: <% $.archive_host %>
                 description: <% $.archive_description %>
+                path: <% $.archive_path %>
 
             ### END TSM ARCHIVE VERIFY ###
 
