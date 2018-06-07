@@ -20,3 +20,8 @@ parameters:
     default: ""
     type: string
     description: "Host from where the archive was uploaded." 
+
+  path:
+    default: ""
+    type: string
+    description: "Path to the uploaded archive at PDC."
