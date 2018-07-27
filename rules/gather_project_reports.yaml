@@ -1,6 +1,6 @@
 ---
-name: "arteria-packs.gather_project_reports"
-pack: "arteria-packs"
+name: "snpseq-packs.gather_project_reports"
+pack: "snpseq-packs"
 description: "Sync project reports from Irma to the summary host at the set intervals."
 enabled: true
 
@@ -11,4 +11,4 @@ trigger:
       delta: 2
 
 action:
-    ref: "arteria-packs.gather_project_reports"
+    ref: "snpseq-packs.gather_project_reports"

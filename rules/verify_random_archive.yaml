@@ -1,6 +1,6 @@
 ---
-name: "arteria-packs.verify_random_archive"
-pack: "arteria-packs"
+name: "snpseq-packs.verify_random_archive"
+pack: "snpseq-packs"
 description: "Verifies MD5sums for a randomly chosen, uploaded and unverified archive."
 enabled: true
 
@@ -14,5 +14,5 @@ trigger:
       second: 0
 
 action:
-    ref: "arteria-packs.archive_verify_random"
+    ref: "snpseq-packs.archive_verify_random"
 
