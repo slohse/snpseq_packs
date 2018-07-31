@@ -5,14 +5,14 @@ description: >
 enabled: true
 runner_type: mistral-v2
 entry_point: workflows/archive_upload.yaml
-pack: arteria-packs
+pack: snpseq-packs
 parameters:
   context:
     default: {}
     immutable: true
     type: object
   workflow:
-    default: arteria-packs.archive_upload
+    default: snpseq-packs.archive_upload
     immutable: true
     type: string
   host:

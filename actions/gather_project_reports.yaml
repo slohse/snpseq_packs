@@ -4,14 +4,14 @@ description: Sync project reports from Irma to the summary host
 enabled: true
 runner_type: mistral-v2
 entry_point: workflows/gather_project_reports.yaml
-pack: arteria-packs
+pack: snpseq-packs
 parameters:
   context:
     default: {}
     immutable: true
     type: object
   workflow:
-    default: arteria-packs.gather_project_reports
+    default: snpseq-packs.gather_project_reports
     immutable: true
     type: string
   year:

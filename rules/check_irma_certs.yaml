@@ -1,6 +1,6 @@
 ---
-name: "arteria-packs.check_irma_certs"
-pack: "arteria-packs"
+name: "snpseq-packs.check_irma_certs"
+pack: "snpseq-packs"
 description: "Warn if Irma certs expire soon"
 enabled: true
 
@@ -13,5 +13,5 @@ trigger:
       second: 0
 
 action:
-    ref: "arteria-packs.check_irma_certs"
+    ref: "snpseq-packs.check_irma_certs"
 
