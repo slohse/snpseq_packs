@@ -68,6 +68,8 @@ incoming_svc_urls:
 charon_api_token: dummy_token
 charon_base_url: http://charon.url
 slack_webhook_url: https://slack.webhook.url
+# proxy to use when posting to slack
+slack_proxy_url:
 
 charon_status_report_slack_channel: "#bottest"
 check_cert_slack_channel: "#bottest"
