@@ -1,5 +1,6 @@
 
 import requests
+from requests.exceptions import HTTPError
 from st2actions.runners.pythonrunner import Action
 
 
@@ -58,6 +59,10 @@ class SlackPoster(Action):
                                  proxies=proxies)
         try:
             notifier.post_message(message)
+            return True, ""
+        except HTTPError as e:
+            self.logger.error("Got the following HTTP error when trying to post to Slack: {}".format(e))
+            return False, ""
         except Exception as e:
             self.logger.error("Got error when trying to post to Slack: {}".format(e))
-            raise
+            return False, ""
