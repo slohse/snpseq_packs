@@ -1,0 +1,2 @@
+# usage: rule_switch {enable|disable}
+st2 rule list -p snpseq_packs -a ref -y | awk '{print($3)}' |xargs -n1 st2 rule $1
