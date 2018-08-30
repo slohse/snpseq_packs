@@ -207,6 +207,16 @@ workflows:
                     destination: <% $.summary_destination %>/<% $.current_year %>
                     include_file: /etc/arteria/misc/summary.rsync
                 on-success:
+                    - create_lims_integration_links
+
+            create_lims_integration_links:
+                action: core.remote
+                input:
+                    cmd: ln -s <% $.summary_destination %>/<% $.runfolder_name %> <% $.summary_destination %>/LIMS-integration/<% $.runfolder_name %>
+                    hosts: <% $.summary_host %>
+                    username: <% $.summary_user %>
+                    private_key: <% $.summary_host_key %>
+                on-success:
                     - run_projman_filler
 
             run_projman_filler:
