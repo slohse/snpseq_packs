@@ -212,7 +212,7 @@ workflows:
             create_lims_integration_links:
                 action: core.remote
                 input:
-                    cmd: ln -s <% $.summary_destination %>/<% $.runfolder_name %> <% $.summary_destination %>/LIMS-integration/<% $.runfolder_name %>
+                    cmd: ln -s <% $.summary_destination %>/<% $.current_year %>/<% $.runfolder_name %> <% $.summary_destination %>/LIMS-integration/<% $.runfolder_name %>
                     hosts: <% $.summary_host %>
                     username: <% $.summary_user %>
                     private_key: <% $.summary_host_key %>
