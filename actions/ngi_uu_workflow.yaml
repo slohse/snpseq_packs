@@ -7,14 +7,14 @@ description: >
 enabled: true
 runner_type: mistral-v2
 entry_point: workflows/ngi_uu_workflow.yaml
-pack: arteria-packs
+pack: snpseq_packs
 parameters:
   context:
     default: {}
     immutable: true
     type: object
   workflow:
-    default: arteria-packs.ngi_uu_workflow
+    default: snpseq_packs.ngi_uu_workflow
     immutable: true
     type: string
   host:
@@ -23,10 +23,10 @@ parameters:
   runfolder:
     required: true
     type: string
-  ignore_sisyphus_qc_result:
+  ignore_qc_result:
     default: false
     type: boolean
-    description: "ignore the sisyphus check qc results"
+    description: "Ignore result from actions checking QC"
   bcl2fastq_version:
     default: ""
     type: string
@@ -55,3 +55,7 @@ parameters:
     default: false
     type: boolean
     description: "Set to true to remove previous archive dir; e.g. if re-running a workflow"
+  skip_download_samplesheet_mount:
+    default: false
+    type: boolean
+    description: "Set to true to use a samplesheet from Clarity LIMS when one is present on the samplesheet/processning network share (otherwise the share will take precedence)"

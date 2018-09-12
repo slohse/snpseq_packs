@@ -1,14 +1,15 @@
 
 import requests
-
-import datetime
-
+from requests.exceptions import HTTPError
 from st2actions.runners.pythonrunner import Action
+
 
 class SlackNotifier():
 
-    def __init__(self, base_url, channel, user, icon_emoji=None):
+    def __init__(self, base_url, channel, user, icon_emoji=None, proxies=None):
         self.session = requests.Session()
+        if proxies:
+            self.session.proxies = proxies
         self.headers = {'content-type': 'application/json'}
         self.base_url = base_url
         self.channel = channel
@@ -20,6 +21,7 @@ class SlackNotifier():
 
     def _post_to_slack(self, json_message):
         response = self.session.post(self.base_url, json=json_message)
+        response.raise_for_status()
         return response.status_code
 
     def post_message(self, message):
@@ -47,18 +49,20 @@ class SlackNotifier():
 class SlackPoster(Action):
 
     def run(self, channel, user, message, **kwargs):
+        proxies = None
+        if "slack_proxy_url" in self.config and self.config["slack_proxy_url"] != "":
+            proxies = {'http': self.config["slack_proxy_url"], 'https' : self.config["slack_proxy_url"] }
         notifier = SlackNotifier(base_url=self.config["slack_webhook_url"],
                                  channel=channel,
                                  user=user,
-                                 icon_emoji=kwargs.get('emoji_icon'))
+                                 icon_emoji=kwargs.get('emoji_icon'),
+                                 proxies=proxies)
         try:
-            status = notifier.post_message(message)
-            if status == 200:
-                return True
-            else:
-                return False
+            notifier.post_message(message)
+            return True, ""
+        except HTTPError as e:
+            self.logger.error("Got the following HTTP error when trying to post to Slack: {}".format(e))
+            return False, ""
         except Exception as e:
             self.logger.error("Got error when trying to post to Slack: {}".format(e))
-            return False
-
-
+            return False, ""

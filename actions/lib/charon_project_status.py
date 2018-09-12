@@ -58,10 +58,15 @@ class CharonProjectStatus(Action):
         chcon.pretty_print(open_projects, output_handle)
         message = output_handle.getvalue()
         try:
+            proxies = None
+            if "slack_proxy_url" in self.config and self.config["slack_proxy_url"] != "":
+                proxies = {'http': self.config["slack_proxy_url"], 'https' : self.config["slack_proxy_url"] }
+
             sn = SlackNotifier(base_url=self.config["slack_webhook_url"],
                                channel=self.config["charon_status_report_slack_channel"],
                                user='WGS Status',
-                               icon_emoji=':see_no_evil:')
+                               icon_emoji=':see_no_evil:',
+                               proxies=proxies)
             sn.post_message_with_attachment(message="<!channel> Charon NGI-U open project status {} Z".
                                             format(datetime.datetime.utcnow().isoformat(' ')),
                                             attachment=message)

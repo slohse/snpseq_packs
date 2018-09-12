@@ -1,0 +1,14 @@
+---
+name: "snpseq_packs.gather_project_reports"
+pack: "snpseq_packs"
+description: "Sync project reports from Irma to the summary host at the set intervals."
+enabled: true
+
+trigger:
+    type: "core.st2.IntervalTimer"
+    parameters:
+      unit: hours
+      delta: 2
+
+action:
+    ref: "snpseq_packs.gather_project_reports"

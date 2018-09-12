@@ -112,7 +112,7 @@ class Supr(Action):
 
     def run(self, action, supr_base_api_url, api_user, api_key, **kwargs):
         if action == "get_id_from_email":
-            return self.search_for_pis(kwargs['project_to_email_sensitive_dict'], supr_base_api_url, api_user, api_key)
+            return self.search_for_pi_and_members(kwargs['project_to_email_sensitive_dict'], supr_base_api_url, api_user, api_key)
         elif action == 'create_delivery_project':
             return self.create_delivery_project(supr_base_api_url,
                                                 kwargs['project_names_and_ids'],

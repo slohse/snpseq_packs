@@ -1,5 +1,5 @@
 version: "2.0" # mistral version
-name: arteria-packs.ngi_uu_workflow
+name: snpseq_packs.ngi_uu_workflow
 description: The ngi workflow, from sequencer to remote system...
 
 workflows:
@@ -8,7 +8,7 @@ workflows:
         input:
             - host
             - runfolder
-            - ignore_sisyphus_qc_result
+            - ignore_qc_result
             - bcl2fastq_version
             - barcode_mismatches
             - tiles
@@ -16,6 +16,7 @@ workflows:
             - bcl2fastq_additional_arguments
             - skip_archiving
             - remove_previous_archive_dir
+            - skip_download_samplesheet_mount
         output:
             output_the_whole_workflow_context: <% $ %>
         task-defaults:
@@ -29,16 +30,13 @@ workflows:
               action: core.local
               input:
                 cmd: git rev-parse HEAD
-                cwd: /opt/stackstorm/packs/arteria-packs/
+                cwd: /opt/stackstorm/packs/snpseq_packs/
               on-success:
                 - get_config
 
             get_config:
-              action: arteria-packs.get_pack_config
+              action: snpseq_packs.get_pack_config
               publish:
-                hermes_base_url: <% task(get_config).result.result.hermes_base_url %>
-                hermes_user: <% task(get_config).result.result.hermes_user %>
-                hermes_token: <% task(get_config).result.result.hermes_token %>
                 remote_host: <% task(get_config).result.result.remote_host %>
                 remote_user: <% task(get_config).result.result.remote_user%>
                 remote_destination: <% task(get_config).result.result.remote_destination %>
@@ -51,6 +49,7 @@ workflows:
                 siswrap_service_port: <% task(get_config).result.result.siswrap_service_port %>
                 bcl2fastq_service_port: <% task(get_config).result.result.bcl2fastq_service_port %>
                 runfolder_service_port: <% task(get_config).result.result.runfolder_service_port %>
+                checkqc_service_port: <% task(get_config).result.result.checkqc_service_port %>
                 send_mail_to: <% task(get_config).result.result.send_mail_to %>
                 remote_sisyphus_location: <% task(get_config).result.result.remote_sisyphus_location %>
                 irma_remote_path: <% task(get_config).result.result.irma_remote_path %>
@@ -60,6 +59,8 @@ workflows:
                 ngi_pipeline_url: <% task(get_config).result.result.ngi_pipeline_url %>
                 irma_replace_expressions: <% task(get_config).result.result.irma_replace_expressions %>
                 remote_host_key: <% task(get_config).result.result.remote_host_key %>
+                biotank_user_key: <% task(get_config).result.result.biotank_user_key %>
+                samplesheet_fallback_path: <% task(get_config).result.result.samplesheet_fallback_path %>
               on-success:
                  - mark_as_started
 
@@ -82,25 +83,38 @@ workflows:
                 - get_flowcell_name
 
             get_flowcell_name:
-                action: arteria-packs.get_flowcell_from_runfolder_name
+                action: snpseq_packs.get_flowcell_from_runfolder_name
                 input:
                     runfolder_name: <% $.runfolder_name %>
                 publish:
                     flowcell_name: <% task(get_flowcell_name).result.result %>
                 on-success:
-                    - download_samplesheet
+                    - download_samplesheet_mount: <% $.skip_download_samplesheet_mount = false %>
+                    - download_samplesheet_clarity: <% $.skip_download_samplesheet_mount = true %>
 
             ### GENERAL TASKS END ###
             ### DEMULTIPLEX START ###
-            download_samplesheet:
-                action: core.http
+
+            download_samplesheet_mount:
+                action: snpseq_packs.download_samplesheet_mount
                 input:
-                    url: <% $.hermes_base_url %>/<% $.flowcell_name %>/samplesheetfile
-                    headers:
-                        USER: <% $.hermes_user %>
-                        X-XSRF-TOKEN: <% $.hermes_token %>
+                    flowcell_name: <% $.flowcell_name %>
+                    samplesheet_path: <% $.samplesheet_fallback_path %>
                 publish:
-                    samplesheet_string: <% task(download_samplesheet).result.body.samplesheet %>
+                    samplesheet_string: "<% task(download_samplesheet_mount).result.result %>"
+                on-error:
+                    - download_samplesheet_clarity
+                on-success:
+                    - construct_bcl2fastq_body
+
+            download_samplesheet_clarity:
+                action: snpseq_packs.download_samplesheet_clarity
+                input:
+                    flowcell_name: <% $.flowcell_name %>
+                
+                #Add parameter for server or use dev/prod file based authentication/server selection?
+                publish:
+                    samplesheet_string: "<% task(download_samplesheet_clarity).result.result %>"
                 on-success:
                     - construct_bcl2fastq_body
 
@@ -108,7 +122,7 @@ workflows:
             # bcl2fastq-ws, we remove any empty keys from
             # this body.
             construct_bcl2fastq_body:
-                action: arteria-packs.parse_bcl2fastq_args
+                action: snpseq_packs.parse_bcl2fastq_args
                 input:
                     samplesheet: "<% $.samplesheet_string %>"
                     bcl2fastq_version: "<% $.bcl2fastq_version %>"
@@ -116,13 +130,14 @@ workflows:
                     tiles: "<% $.tiles %>"
                     use_base_mask: "<% $.use_base_mask %>"
                     additional_arguments: "<% $.bcl2fastq_additional_arguments %>"
+                    create_indexes: "True"
                 publish:
                     bcl2fastq_body: <% task(construct_bcl2fastq_body).result.result %>
                 on-success:
                     - run_bcl2fastq
 
             run_bcl2fastq:
-                action: arteria-packs.poll_status
+                action: snpseq_packs.poll_status
                 input:
                     url: "http://<% $.host %>:<% $.bcl2fastq_service_port %>/api/1.0/start/<% $.runfolder_name %>"
                     timeout: 86400 # Wait for 24 h before timing out.
@@ -135,86 +150,42 @@ workflows:
                 input:
                     cmd: ssh <% $.host %> "echo <% task(run_bcl2fastq).result.result.response_from_start.response.bcl2fastq_version %> > <% $.runfolder %>/bcl2fastq_version"
                 on-success:
-                    - download_sisyphus_config
+                    - run_checkqc
 
             ## DEMULTIPLEX END ###
-            ### QUICK REPORT START ###
-            download_sisyphus_config:
-                action: core.http
-                input:
-                    url: <% $.hermes_base_url %>/<% $.flowcell_name %>/configfile
-                    headers:
-                      USER: <% $.hermes_user %>
-                      X-XSRF-TOKEN: <% $.hermes_token %>
-                publish:
-                    sisyphus_conf_string: <% task(download_sisyphus_config).result.body.config %>
-                on-success:
-                    - construct_report_body
+            ### CHECKQC START ###
+            run_checkqc:
+              action: snpseq_packs.run_checkqc
+              input:
+                url: "http://<% $.host %>:<% $.checkqc_service_port %>/qc/<% $.runfolder_name %>"
+                ignore_result: <% $.ignore_qc_result %>
+              on-success:
+                - copy_sisyphus_config
+              on-error:
+                - copy_sisyphus_config
 
-            construct_report_body:
-                action: arteria-packs.parse_siswrap_args
+            copy_sisyphus_config:
+                action: core.remote
                 input:
-                    runfolder: "<% $.runfolder_name %>"
-                    sisyphus_config: "<% $.sisyphus_conf_string %>"
-                publish:
-                    report_body: <% task(construct_report_body).result.result %>
-                on-success:
-                    - run_sisyphus_quick_report
-
-            run_sisyphus_quick_report:
-                action: arteria-packs.poll_status
-                input:
-                    url: "http://<% $.host %>:<% $.siswrap_service_port %>/api/1.0/report/run/<% $.runfolder_name %>"
-                    body: <% $.report_body %>
+                    cmd: "cp -v /opt/arteria/arteria-siswrap-env/deps/sisyphus/sisyphus-latest/sisyphus.yml <% $.runfolder %>/"
+                    hosts: <% $.host %>
+                    private_key: <% $.biotank_user_key %>
                 on-success:
                     - run_sisyphus_check_indices
-            ### QUICK REPORT END ###
 
             ### CHECK INDICES START###
             run_sisyphus_check_indices:
-                action: arteria-packs.poll_status
+                action: snpseq_packs.poll_status
                 input:
                     url: "http://<% $.host %>:<% $.siswrap_service_port %>/api/1.0/checkindices/run/<% $.runfolder_name %>"
                     body:
                       runfolder: <% $.runfolder_name %>
-                    ignore_result: <% $.ignore_sisyphus_qc_result %>
+                    ignore_result: <% $.ignore_qc_result %>
                 on-success:
-                    - download_qc_config
+                    - get_year: <% task(run_checkqc).state = 'SUCCESS'  %>
+                    - oh_shit_error: <% task(run_checkqc).state = 'ERROR' %>
+                    - mark_as_failed: <% task(run_checkqc).state = 'ERROR' %>
             ### CHECK INDICES END###
-
-            ### QUALITY CONTROL START ###
-            download_qc_config:
-                action: core.http
-                input:
-                    url: <% $.hermes_base_url %>/<% $.flowcell_name %>/qcfile
-                    headers:
-                      USER: <% $.hermes_user %>
-                      X-XSRF-TOKEN: <% $.hermes_token %>
-                publish:
-                    qc_conf_string: <% task(download_qc_config).result.body.qc %>
-                on-success:
-                    - construct_qc_body
-
-            construct_qc_body:
-                action: arteria-packs.parse_siswrap_args
-                input:
-                    runfolder: "<% $.runfolder_name %>"
-                    qc_config: "<% $.qc_conf_string %>"
-                publish:
-                    qc_body: <% task(construct_qc_body).result.result %>
-                on-success:
-                    - run_sisyphus_qc
-
-            run_sisyphus_qc:
-                action: arteria-packs.poll_status
-                input:
-                    url: "http://<% $.host %>:<% $.siswrap_service_port %>/api/1.0/qc/run/<% $.runfolder_name %>"
-                    body: <% $.qc_body %>
-                    ignore_result: <% $.ignore_sisyphus_qc_result %>
-                on-success:
-                    - get_year
-            ### QUALITY CONTROL END ###
-
             ### TRANSFER FILES TO UPPMAX START ###
             get_year:
               action: core.local
@@ -226,7 +197,7 @@ workflows:
                 - rsync_to_summary_host
 
             rsync_to_summary_host:
-                action: arteria-packs.rsync
+                action: snpseq_packs.rsync
                 input:
                     source: <% $.runfolder %>
                     source_host: <% $.host %>
@@ -239,7 +210,7 @@ workflows:
                     - run_projman_filler
 
             run_projman_filler:
-              action: arteria-packs.run_projman_filler
+              action: snpseq_packs.run_projman_filler
               input:
                 hosts: <% $.summary_host %>
                 username: <% $.summary_user %>
@@ -250,59 +221,10 @@ workflows:
                 runfolder_name: "<% $.runfolder_name %>"
                 private_key: <% $.summary_host_key %>
               on-success:
-                - check_hosts_to_rsync_to
-
-            check_hosts_to_rsync_to:
-               action: core.http
-               input:
-                    url: <% $.hermes_base_url %>/<% $.flowcell_name %>/flowcell/analysishostinfo
-                    headers:
-                      USER: <% $.hermes_user %>
-                      X-XSRF-TOKEN: <% $.hermes_token %>
-               on-success:
-                    - rsync_to_milou: <% 'milou-b.uppmax.uu.se' in task(check_hosts_to_rsync_to).result.body.remote_hosts %>
-                    - make_irma_samplesheet_changes: <% 'irma.uppmax.uu.se' in task(check_hosts_to_rsync_to).result.body.remote_hosts %>
-
-             # Irma requies specific values in the sisyphus.yml to work.
-             # This is a hack to replace those specific values for runs
-             # which are to be synced to irma.
-            make_irma_samplesheet_changes:
-               with-items: expression in <% $.irma_replace_expressions %>
-               action: core.local
-               input:
-                 cmd: ssh <% $.host %> sed -i -e \'<% $.expression %>\' <% $.runfolder %>/sisyphus.yml
-               on-success:
-                 - rsync_to_irma
-
-            rsync_to_milou:
-                action: arteria-packs.sync_workflow
-                input:
-                    runfolder: <% $.runfolder %>
-                    runfolder_name: <% $.runfolder_name %>
-                    source_host: <% $.host %>
-                    source_user: "arteria"
-                    destination_host: <% $.remote_host %>
-                    destination_user: <% $.remote_user %>
-                    destination_path: <% $.remote_destination %>
-                    rsync_include_file: /etc/arteria/misc/hiseq.rsync
-                    md5_output_file: "checksums.md5"
-                on-success:
-                    - milou_check_md5sums
-
-            milou_check_md5sums:
-                action: core.remote
-                input:
-                    hosts: <% $.remote_host %>
-                    username: <% $.remote_user %>
-                    cwd: <% $.remote_destination %>
-                    cmd: md5sum -c  <% $.remote_destination %>/<% $.runfolder_name %>/MD5/checksums.md5
-                    timeout: 86400 # 24 h timeout
-                    private_key: <% $.remote_host_key %>
-                on-success:
-                    - milou_start_aeacus_stats
+                - rsync_to_irma
 
             rsync_to_irma:
-                action: arteria-packs.sync_workflow
+                action: snpseq_packs.sync_workflow
                 input:
                     runfolder: <% $.runfolder %>
                     runfolder_name: <% $.runfolder_name %>
@@ -317,7 +239,7 @@ workflows:
                   - irma_check_md5sums
 
             irma_check_md5sums:
-                action: arteria-packs.poll_status
+                action: snpseq_packs.poll_status
                 input:
                     url: <% $.irma_checksum_base_url %>/start/<% $.runfolder_name %>?apikey=<% $.irma_api_key %>
                     body:
@@ -331,7 +253,7 @@ workflows:
 
             ### START AEACUS REPORT STEPS ###
             irma_run_aeacus_stats:
-               action: arteria-packs.poll_status
+               action: snpseq_packs.poll_status
                input:
                     url: <% $.irma_siswrap_base_url %>/aeacusstats/run/<% $.runfolder_name %>?apikey=<% $.irma_api_key %>
                     body:
@@ -342,7 +264,7 @@ workflows:
                  - irma_run_aeacus_reports
 
             irma_run_aeacus_reports:
-               action: arteria-packs.poll_status
+               action: snpseq_packs.poll_status
                input:
                   url: <% $.irma_siswrap_base_url %>/aeacusreports/run/<% $.runfolder_name %>?apikey=<% $.irma_api_key %>
                   body:
@@ -355,36 +277,6 @@ workflows:
                 - mark_as_finished: <% $.skip_archiving = true %>
 
             ### END AEACUS REPORT STEPS ###
-            # TODO Need to add starting the ngi pipeline on irma
-
-            milou_start_aeacus_stats:
-                action: core.remote
-                input:
-                    hosts: <% $.remote_host %>
-                    username: <% $.remote_user %>
-                    cwd: <% $.remote_destination %>/<% $.runfolder_name %>
-                    cmd: <% $.remote_sisyphus_location %>/aeacus-stats.pl -runfolder <% $.remote_destination %>/<% $.runfolder_name %>
-                    private_key: <% $.remote_host_key %>
-                    env:
-                        PERL5LIB: /proj/a2009002/perl/lib/perl5/
-                on-success:
-                    - milou_start_aeacus_report
-
-            milou_start_aeacus_report:
-                action: core.remote
-                input:
-                    hosts: <% $.remote_host %>
-                    username: <% $.remote_user %>
-                    cwd: <% $.remote_destination %>/<% $.runfolder_name %>
-                    cmd: <% $.remote_sisyphus_location %>/aeacus-reports.pl -runfolder <% $.remote_destination %>/<% $.runfolder_name %>
-                    private_key: <% $.remote_host_key %>
-                    env:
-                        PERL5LIB: /proj/a2009002/perl/lib/perl5/
-                on-success:
-                    - upload_runfolder_to_pdc: <% $.skip_archiving = false %>
-                    - notify_finished: <% $.skip_archiving = true %>
-                    - mark_as_finished: <% $.skip_archiving = true %>
-            ## START AEACUS REPORT STEPS END ###
 
             ## START NGI_PIPELINE IF NECESSARY ##
             # TODO Make sure to setup new URL for ngi_pipeline
@@ -395,15 +287,17 @@ workflows:
             ## END START NGI_PIPELINE ##
 
             ## START TSM ARCHIVE TO PDC ##
+
             upload_runfolder_to_pdc:
-                action: arteria-packs.archive_upload
+                action: snpseq_packs.archive_upload
                 input:
-                    runfolder: <% $.runfolder %>
+                    runfolder: <% $.runfolder_name %>
                     host: <% $.host %>
                     remove_previous_archive: <% $.remove_previous_archive_dir %>
                 on-success:
                   - notify_finished
                   - mark_as_finished
+
             ## END TSM ARCHIVE TO PDC ##
 
             ## NOTIFIER START ###

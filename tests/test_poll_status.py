@@ -17,6 +17,9 @@ class PollStatusTestCase(BaseActionTestCase):
         def json(self):
             return {'link': self.response_link}
 
+        def raise_for_status(self):
+            return
+
     class MockStatusResponse:
         def __init__(self, state_list):
             self.state_list = state_list
@@ -25,6 +28,9 @@ class PollStatusTestCase(BaseActionTestCase):
         # of the list. This way we can vary state over time.
         def json(self):
             return {"state": self.state_list.pop(0)}
+
+        def raise_for_status(self):
+            return
 
     def run_with_state(self, post_state, state, expected_exit_status, ignore_results=False):
 
