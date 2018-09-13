@@ -5,14 +5,14 @@ description: >
 enabled: true
 runner_type: mistral-v2
 entry_point: workflows/archive_upload_irma.yaml
-pack: arteria-packs
+pack: snpseq_packs
 parameters:
   context:
     default: {}
     immutable: true
     type: object
   workflow:
-    default: arteria-packs.archive_upload_irma
+    default: snpseq_packs.archive_upload_irma
     immutable: true
     type: string
   project:

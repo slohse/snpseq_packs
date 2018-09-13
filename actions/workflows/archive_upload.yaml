@@ -58,7 +58,7 @@ workflows:
                  - generate_checksums
 
             generate_checksums:
-                action: snpseq_packs.poll_status-archive
+                action: snpseq_packs.poll_status
                 input:
                   url: http://<% $.host %>:<% $.archive_upload_port %>/api/1.0/gen_checksums/<% $.runfolder %>_archive
                   verify_ssl_cert: True
@@ -68,7 +68,7 @@ workflows:
                   - upload_archive
 
             upload_archive:
-                action: snpseq_packs.poll_status-archive
+                action: snpseq_packs.poll_status
                 input:
                   url: http://<% $.host %>:<% $.archive_upload_port %>/api/1.0/upload/<% $.runfolder %>_archive
                   verify_ssl_cert: True

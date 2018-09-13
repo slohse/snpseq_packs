@@ -5,14 +5,14 @@ description: >
 enabled: true
 runner_type: mistral-v2
 entry_point: workflows/archive_missing_files_irma.yaml
-pack: arteria-packs
+pack: snpseq_packs
 parameters:
   context:
     default: {}
     immutable: true
     type: object
   workflow:
-    default: arteria-packs.archive_missing_files_irma
+    default: snpseq_packs.archive_missing_files_irma
     immutable: true
     type: string
   project:

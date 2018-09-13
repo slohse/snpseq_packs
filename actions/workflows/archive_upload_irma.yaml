@@ -1,5 +1,5 @@
 version: "2.0" # mistral version
-name: arteria-packs.archive_upload_irma
+name: snpseq_packs.archive_upload_irma
 description: Archives a runfolder to PDC with TSM
 
 workflows:
@@ -20,12 +20,12 @@ workflows:
               action: core.local
               input:
                 cmd: git rev-parse HEAD
-                cwd: /opt/stackstorm/packs/arteria-packs/
+                cwd: /opt/stackstorm/packs/snpseq_packs/
               on-success:
                 - get_config
 
             get_config:
-              action: arteria-packs.get_pack_config
+              action: snpseq_packs.get_pack_config
               publish:
                 irma_archive_upload_base_url: <% task(get_config).result.result.irma_archive_upload_base_url %>
                 irma_api_key: <% task(get_config).result.result.irma_api_key %>
@@ -49,7 +49,7 @@ workflows:
                 - generate_checksums
 
             generate_checksums:
-                action: arteria-packs.poll_status-archive
+                action: snpseq_packs.poll_status
                 input:
                   url: <% $.irma_archive_upload_base_url %>/gen_checksums/<% $.project %>_archive?apikey=<% $.irma_api_key %>
                   verify_ssl_cert: True
@@ -59,7 +59,7 @@ workflows:
                   - upload_archive
 
             upload_archive:
-                action: arteria-packs.poll_status-archive
+                action: snpseq_packs.poll_status
                 input:
                   url: <% $.irma_archive_upload_base_url %>/upload/<% $.project %>_archive?apikey=<% $.irma_api_key %>
                   verify_ssl_cert: True
@@ -94,7 +94,7 @@ workflows:
                     body: "Finished archiving <% $.project %> from Irma."
 
             notify_failure_on_slack:
-               action: arteria-packs.post_to_slack
+               action: snpseq_packs.post_to_slack
                input:
                  user: 'I, Archivian'
                  emoji_icon: ':robot_face:'
