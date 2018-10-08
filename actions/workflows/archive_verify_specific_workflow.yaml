@@ -1,5 +1,5 @@
 version: "2.0" # mistral version
-name: snpseq_packs.archive_verify_specific
+name: snpseq_packs.archive_verify_specific_workflow
 description: Verify a specific runfolder archive that was uploaded to PDC
 
 workflows:

@@ -51,7 +51,7 @@ workflows:
                 - verify_archive
 
             verify_archive:
-              action: snpseq_packs.archive_verify_specific
+              action: snpseq_packs.archive_verify_specific_workflow
               input:
                 archive: <% $.archive_name %>
                 host: <% $.archive_host %>
