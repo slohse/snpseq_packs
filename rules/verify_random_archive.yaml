@@ -14,5 +14,5 @@ trigger:
       second: 0
 
 action:
-    ref: "snpseq_packs.archive_verify_random"
+    ref: "snpseq_packs.archive_verify_random_workflow"
 
