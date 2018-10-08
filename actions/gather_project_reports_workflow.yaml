@@ -1,9 +1,9 @@
 ---
-name: gather_project_reports
+name: gather_project_reports_workflow
 description: Sync project reports from Irma to the summary host
 enabled: true
 runner_type: mistral-v2
-entry_point: workflows/gather_project_reports.yaml
+entry_point: workflows/gather_project_reports_workflow.yaml
 pack: snpseq_packs
 parameters:
   context:
@@ -11,7 +11,7 @@ parameters:
     immutable: true
     type: object
   workflow:
-    default: snpseq_packs.gather_project_reports
+    default: snpseq_packs.gather_project_reports_workflow
     immutable: true
     type: string
   year:
