@@ -13,5 +13,5 @@ trigger:
       second: 0
 
 action:
-    ref: "snpseq_packs.check_irma_certs"
+    ref: "snpseq_packs.check_irma_certs_workflow"
 
