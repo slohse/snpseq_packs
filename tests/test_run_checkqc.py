@@ -11,16 +11,17 @@ class RunCheckQCTestCase(BaseActionTestCase):
     action_cls = RunCheckQC
 
     class MockGetResponse:
-        def __init__(self, mock_response):
+        def __init__(self, mock_response, status_code):
             self.response = mock_response
+            self.status_code = status_code
         def json(self):
             return self.response
 
-    def run_checkqc(self, mock_response, expected_exit_status, ignore_result=False):
+    def run_checkqc(self, mock_response, status_code, expected_exit_status, ignore_result=False):
 
         fake_url = 'http://foo.bar/qc'
 
-        with mock.patch.object(requests, 'get', return_value = self.MockGetResponse(mock_response)):
+        with mock.patch.object(requests, 'get', return_value = self.MockGetResponse(mock_response, status_code)):
 
             action = self.get_action_instance()
 
@@ -43,7 +44,7 @@ class RunCheckQCTestCase(BaseActionTestCase):
                                                            "error": "unknown",
                                                            "warning": 180}]},
                              "version": "1.2.0"}
-        self.run_checkqc(mock_response = mock_response,
+        self.run_checkqc(mock_response = mock_response, status_code = 200,
                          expected_exit_status = True, ignore_result = False)
 
     def test_error(self):
@@ -59,7 +60,7 @@ class RunCheckQCTestCase(BaseActionTestCase):
                                                            "error": 120,
                                                            "warning": 180}]},
                              "version": "1.2.0"}
-        self.run_checkqc(mock_response = mock_response,
+        self.run_checkqc(mock_response = mock_response, status_code = 200,
                          expected_exit_status = False, ignore_result = False)
 
     def test_error_ignore_result(self):
@@ -75,6 +76,16 @@ class RunCheckQCTestCase(BaseActionTestCase):
                                                            "error": 120,
                                                            "warning": 180}]},
                              "version": "1.2.0"}
-        self.run_checkqc(mock_response = mock_response,
+        self.run_checkqc(mock_response = mock_response, status_code = 200,
+                         expected_exit_status = True, ignore_result = True)
+
+    def test_status_code_not_200(self):
+        mock_response = {"reason": "There is a problem with the qc config."}
+        self.run_checkqc(mock_response = mock_response, status_code = 500,
+                         expected_exit_status = False, ignore_result = False)
+
+    def test_ignore_status_code_not_200(self):
+        mock_response = {"reason": "There is a problem with the qc config."}
+        self.run_checkqc(mock_response = mock_response, status_code = 500,
                          expected_exit_status = True, ignore_result = True)
 
