@@ -1,5 +1,5 @@
 version: "2.0" # mistral version
-name: snpseq_packs.archive_missing_files_irma
+name: snpseq_packs.archive_missing_files_irma_workflow
 description: Reuploads missing files from an archive on Irma to PDC with TSM
 
 workflows:
