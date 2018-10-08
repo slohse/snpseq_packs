@@ -302,7 +302,7 @@ workflows:
             ## START TSM ARCHIVE TO PDC ##
 
             upload_runfolder_to_pdc:
-                action: snpseq_packs.archive_upload
+                action: snpseq_packs.archive_upload_workflow
                 input:
                     runfolder: <% $.runfolder_name %>
                     host: <% $.host %>
