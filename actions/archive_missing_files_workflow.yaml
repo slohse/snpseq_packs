@@ -1,10 +1,10 @@
 ---
-name: archive_missing_files
+name: archive_missing_files_workflow
 description: >
   Archives missing files from a runfolder to PDC
 enabled: true
 runner_type: mistral-v2
-entry_point: workflows/archive_missing_files.yaml
+entry_point: workflows/archive_missing_files_workflow.yaml
 pack: snpseq_packs
 parameters:
   context:
@@ -12,7 +12,7 @@ parameters:
     immutable: true
     type: object
   workflow:
-    default: snpseq_packs.archive_missing_files
+    default: snpseq_packs.archive_missing_files_workflow
     immutable: true
     type: string
   host:

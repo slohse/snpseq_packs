@@ -1,10 +1,10 @@
 ---
-name: archive_upload_irma
+name: archive_upload_workflow
 description: >
-  Archives a project on Irma to PDC with TSM
+  Archives a runfolder to PDC with TSM
 enabled: true
 runner_type: mistral-v2
-entry_point: workflows/archive_upload_irma.yaml
+entry_point: workflows/archive_upload_workflow.yaml
 pack: snpseq_packs
 parameters:
   context:
@@ -12,11 +12,15 @@ parameters:
     immutable: true
     type: object
   workflow:
-    default: snpseq_packs.archive_upload_irma
+    default: snpseq_packs.archive_upload_workflow
     immutable: true
     type: string
-  project:
-    description: 'Project ID to archive'
+  host:
+    description: 'Host where runfolder is located'
+    required: true
+    type: string
+  runfolder:
+    description: 'Runfolder to archive'
     required: true
     type: string
   remove_previous_archive:

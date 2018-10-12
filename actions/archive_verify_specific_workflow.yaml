@@ -1,10 +1,10 @@
 ---
-name: archive_verify_specific
+name: archive_verify_specific_workflow
 description: >
   Verifies the checksums for a specific runfolder archive that has been uploaded to PDC
 enabled: true
 runner_type: mistral-v2
-entry_point: workflows/archive_verify_specific.yaml
+entry_point: workflows/archive_verify_specific_workflow.yaml
 pack: snpseq_packs
 parameters:
   context:
@@ -12,7 +12,7 @@ parameters:
     immutable: true
     type: object
   workflow:
-    default: snpseq_packs.archive_verify_specific
+    default: snpseq_packs.archive_verify_specific_workflow
     immutable: true
     type: string
   host:
@@ -23,7 +23,7 @@ parameters:
     description: 'Archive to verify'
     required: true
     type: string
-  description: 
+  description:
     description: 'Unique description used when uploading archive to PDC'
     required: true
     type: string

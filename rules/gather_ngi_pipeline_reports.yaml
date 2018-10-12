@@ -11,6 +11,6 @@ trigger:
       delta: 6
 
 action:
-    ref: "snpseq_packs.gather_ngi_pipeline_reports"
+    ref: "snpseq_packs.gather_ngi_pipeline_reports_workflow"
 
 

@@ -1,5 +1,5 @@
 version: "2.0" # mistral version
-name: snpseq_packs.archive_upload
+name: snpseq_packs.archive_upload_workflow
 description: Archives a runfolder to PDC with TSM
 
 workflows:

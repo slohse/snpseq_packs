@@ -11,4 +11,4 @@ trigger:
       delta: 2
 
 action:
-    ref: "snpseq_packs.gather_project_reports"
+    ref: "snpseq_packs.gather_project_reports_workflow"

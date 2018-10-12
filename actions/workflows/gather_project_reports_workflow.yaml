@@ -1,5 +1,5 @@
 version: "2.0" # mistral version
-name: snpseq_packs.gather_project_reports
+name: snpseq_packs.gather_project_reports_workflow
 description: Downloads summary statistics data from irma.
 
 workflows:

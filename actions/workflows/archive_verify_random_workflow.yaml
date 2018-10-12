@@ -1,5 +1,5 @@
 version: "2.0" # mistral version
-name: snpseq_packs.archive_verify_random
+name: snpseq_packs.archive_verify_random_workflow
 description: Verify a randomly picked runfolder archive that was uploaded to PDC. Supposed to be run each week. Picks a runfolder that has not been verified previously, and was uploaded within the interval [1 week ago, yesterday].
 
 workflows:
@@ -51,7 +51,7 @@ workflows:
                 - verify_archive
 
             verify_archive:
-              action: snpseq_packs.archive_verify_specific
+              action: snpseq_packs.archive_verify_specific_workflow
               input:
                 archive: <% $.archive_name %>
                 host: <% $.archive_host %>
