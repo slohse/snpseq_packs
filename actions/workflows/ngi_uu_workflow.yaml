@@ -1,4 +1,4 @@
-version: "2.0" # mistral version
+gersion: "2.0" # mistral version
 name: snpseq_packs.ngi_uu_workflow
 description: The ngi workflow, from sequencer to remote system...
 
@@ -272,9 +272,24 @@ workflows:
                     verify_ssl_cert: True
                     irma_mode: True
                 on-success:
+                  - upload_runfolder_to_pdc: <% $.skip_archiving = false %>
                   - irma_run_aeacus_stats
 
             ### TRANSFER FILES TO UPPMAX END ###
+
+            ## START TSM ARCHIVE TO PDC ##
+
+            upload_runfolder_to_pdc:
+                action: snpseq_packs.archive_upload_workflow
+                input:
+                    runfolder: <% $.runfolder_name %>
+                    host: <% $.host %>
+                    remove_previous_archive: <% $.remove_previous_archive_dir %>
+                on-success:
+                  - notify_finished
+                  - mark_as_finished
+
+            ## END TSM ARCHIVE TO PDC ##
 
             ### START AEACUS REPORT STEPS ###
             irma_run_aeacus_stats:
@@ -297,9 +312,8 @@ workflows:
                   verify_ssl_cert: True
                   irma_mode: True
                on-success:
-                - upload_runfolder_to_pdc: <% $.skip_archiving = false %>
-                - notify_finished: <% $.skip_archiving = true %>
-                - mark_as_finished: <% $.skip_archiving = true %>
+                 - notify_finished: <% $.skip_archiving = true %>
+                 - mark_as_finished: <% $.skip_archiving = true %>
 
             ### END AEACUS REPORT STEPS ###
 
@@ -310,20 +324,6 @@ workflows:
             #  input:
             #    url: <% $.ngi_pipeline_url %>/<% $.runfolder_name %>
             ## END START NGI_PIPELINE ##
-
-            ## START TSM ARCHIVE TO PDC ##
-
-            upload_runfolder_to_pdc:
-                action: snpseq_packs.archive_upload_workflow
-                input:
-                    runfolder: <% $.runfolder_name %>
-                    host: <% $.host %>
-                    remove_previous_archive: <% $.remove_previous_archive_dir %>
-                on-success:
-                  - notify_finished
-                  - mark_as_finished
-
-            ## END TSM ARCHIVE TO PDC ##
 
             ## NOTIFIER START ###
             notify_finished:
