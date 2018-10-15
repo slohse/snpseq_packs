@@ -1,4 +1,4 @@
-gersion: "2.0" # mistral version
+version: "2.0" # mistral version
 name: snpseq_packs.ngi_uu_workflow
 description: The ngi workflow, from sequencer to remote system...
 
