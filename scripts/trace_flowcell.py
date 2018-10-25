@@ -105,7 +105,10 @@ def print_stackstorm_output(sorted_actions):
         output, error = process.communicate()
         print output
         
-
+def print_stackstorm_id(sorted_actions):
+    for a in sorted_actions:
+        print a["id"]
+        
 
 if __name__ == "__main__":
 
@@ -140,7 +143,13 @@ if __name__ == "__main__":
     filtered_actions = find.filter_actions_by_name(actions, args.workflow)
     sorted_actions = find.sort_actions_by_timestamp()
     
-    print_stackstorm_output(sorted_actions)
+    try:
+        print_stackstorm_output(sorted_actions)
+    except OSError as w:
+        z = w
+        print "\nIt looks as if stackstorm [st2] is unavailable. I will just list the IDs:"
+    print_stackstorm_id(sorted_actions)
+    
     print "    {} [{}]\n".format(folder2trace, folder_state)
     
     sys.exit()
