@@ -2,117 +2,145 @@ import os
 import requests
 import json
 import sys
+import subprocess
 import yaml
 import argparse
 from datetime import datetime
 
+class get_stuff:
+    def __init__(self, api_base_url, access_headers, req_verify, tag):
+        self.api_base_url = api_base_url
+        self.headers = access_headers
+        self.verify = req_verify
+        self.tag = tag
+    
+    def get_traces_for_tag(self):
+        traces_response = requests.get(
+            "{}/{}/?{}={}".format(self.api_base_url, "traces", "trace_tag", self.tag),
+            verify = self.verify,
+            headers = self.headers)
+        if not traces_response.ok:
+            raise Exception("Response not OK, got: " + traces_response.text)
+        self.traces = json.loads(traces_response.text)
+        return json.loads(traces_response.text)
+    
+    def get_executions_from_traces(self):
+        for trace in self.traces:
+            trace_id = trace["id"]
+            trace_info_response = requests.get(
+                "{}/{}/{}".format(self.api_base_url, "traces", trace_id),
+                verify = self.verify,
+                headers = self.headers)
+            trace_info = json.loads(trace_info_response.text)
+            action_executions = map(lambda x: x["object_id"], trace_info["action_executions"])
+            for execution in action_executions:
+                yield execution
+
+    def get_actions_from_executions(self, executions):
+        for execution_id in executions:
+            execution_info_response = requests.get(
+                "{}/{}/{}".format(self.api_base_url, "executions", execution_id),
+                verify = self.verify,
+                headers = self.headers)
+            execution_info = json.loads(execution_info_response.text)
+            yield execution_info
+    
+    def filter_actions_by_name(self, actions, name):
+        self.filtered_actions = (action for action in actions if name in action["action"]["name"])
+
+    def sort_actions_by_timestamp(self):
+        def get_start_time(action):
+            start_time = datetime.strptime(action['start_timestamp'].split(".")[0], "%Y-%m-%dT%H:%M:%S")
+            return start_time
+        sort_actions = sorted(self.filtered_actions, key = get_start_time)
+        return sort_actions
 
 
+class runfolders:
+    def __init__(self):
 
-def get_traces_for_tag(tag, headers):
-    traces_response = requests.get(
-        "{}/{}/?{}={}".format(api_base_url, "traces", "trace_tag", tag),
-        verify=False,
-        headers=headers)
-    if not traces_response.ok:
-        raise Exception("Response not OK, got: " + traces_response.text)
+        with open(args.config, 'r') as ymlfile:
+            cfg = yaml.load(ymlfile)
+        hosts = cfg['runfolder_svc_urls']
 
-    return json.loads(traces_response.text)
+        self.hitcount = 0
+        self.outstring = "\n\tstatus\trunfolder_link\n"
+        for host in hosts:
+            url_base = '/'.join(host.split('/')[:-1])
+            result = requests.get("{}?state=*".format(url_base))
+            result_json = json.loads(result.text)
+            self.all_runfolders = result_json["runfolders"]
 
-def get_executions_from_traces(traces, headers):
-    for trace in traces:
-        trace_id = trace["id"]
-        trace_info_response = requests.get(
-            "{}/{}/{}".format(api_base_url, "traces", trace_id),
-            verify=False,
-            headers=headers)
-        trace_info = json.loads(trace_info_response.text)
-        action_executions = map(lambda x: x["object_id"], trace_info["action_executions"])
-        for execution in action_executions:
-            yield execution
+    def pick_runfolder(self, search_term):
+        folders = {}
+        states = {}
+        choice = 0
+        for runfolder in self.all_runfolders:
+                link = runfolder["link"]
+                state = runfolder["state"]
+                if search_term in link and not "rchive" in link and not "biotank" in link:
+                    self.hitcount += 1
+                    dirs = link.split('/')
+                    folders[self.hitcount] = dirs[-1]
+                    states[self.hitcount] = state
+                    self.outstring += "{}\t{}\t{}\n".format(self.hitcount, state, folders[self.hitcount])
+        
+        print self.outstring
+        
+        if self.hitcount == 0:
+            print "No hits found, will terminate."
+            exit(0)
+        elif self.hitcount > 1:
+            self.choice = int(raw_input("Which runfolder to trace: "))
+        else:
+            self.choice = 1
+            
+        return folders[self.choice], states[self.choice]
 
-def get_actions_from_executions(executions, headers):
-    for execution_id in executions:
-        execution_info_response = requests.get(
-            "{}/{}/{}".format(api_base_url, "executions", execution_id),
-            verify=False,
-            headers=headers)
-        execution_info = json.loads(execution_info_response.text)
-        yield execution_info
 
-def filter_actions_by_name(actions, name):
-    return (action for action in actions if name in action["action"]["name"])
+def print_stackstorm_output(sorted_actions):
+    for a in sorted_actions:
+        bashCommand = "st2 execution get {}".format(a["id"])
+        process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE) 
+        output, error = process.communicate()
+        print output
+        
 
-def sort_actions_by_timestamp(actions):
-    def get_start_time(action):
-        #Select start_time, e.g. 2017-05-29T15:03:03.818222Z for each action. Remove everything after ".".
-        start_time = datetime.strptime(action['start_timestamp'].split(".")[0], "%Y-%m-%dT%H:%M:%S")
-        return start_time
-    #Compare elements in actions on key value start_timestamp.
-    sort_actions = sorted(actions, key=get_start_time)
-    return sort_actions
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="Gets execution ids associated with a trace tag (e.g. a runfolder) and a "
-                                             "workflow. It can be used to track executions, e.g: "
-                                             "python scripts/trace_runfolder.py --tag 150605_M00485_0183_000000000-ABGT6_testbio14 | xargs -n1 st2 execution get")
-    parser.add_argument('--flowcell', required=True)
-    parser.add_argument('--api_base_url', default="https://localhost:4041/api/v1")
-    parser.add_argument('--workflow', default="workflow")
+    # Try to load access token from environment - fall back if not available
+    try:
+        access_token = os.environ['ST2_AUTH_TOKEN']
+    except KeyError as e:
+            print("Could not find ST2_AUTH_TOKEN in environment. "
+                "Please set it to your st2 authentication token.")
+    access_headers = {"X-Auth-Token": access_token}
+        
+    parser = argparse.ArgumentParser(description="Gets execution ids associated with a flowcell "
+                                     "(e.g. a runfolder) and a workflow. It can be used to track "
+                                     "executions, e.g: python scripts/trace_flowcell.py "
+                                     "--flowcell 000000000-ABGT6_testbio14 ")
+    parser.add_argument('--flowcell',     required=True)
+    parser.add_argument('--noverify',     action="store_false")
+    parser.add_argument('--api_base_url', default="http://localhost:9101/v1")
+    parser.add_argument('--config',       default="/opt/stackstorm/packs/snpseq_packs/config.yaml")
+    parser.add_argument('--workflow',     default="workflow")
     args = parser.parse_args()
 
-    api_base_url = args.api_base_url
-    workflow_name = args.workflow
-# Load config
-#with open("/opt/stackstorm/packs/snpseq_packs/config.yaml", 'r') as ymlfile:
-    with open("/home/riker752-local/projects/snpseq_packs/config.yaml", 'r') as ymlfile:
-        cfg = yaml.load(ymlfile)
+    get_runfolder = runfolders()
+    folder2trace, folder_state = get_runfolder.pick_runfolder(args.flowcell)
 
-# Get hosts from config
-    hosts = cfg['runfolder_svc_urls']
+    print "Will trace {}.".format(folder2trace)
 
-# Print header
-    print "\tstatus\trunfolder_link"
-
-    search_term = args.flowcell
-    hitcount = 0
-    choice = 0
-    folders = {}
-    for host in hosts:
-        url_base = '/'.join(host.split('/')[:-1])
-        result = requests.get("{}?state=*".format(url_base))
-        result_json = json.loads(result.text)
-        all_runfolders = result_json["runfolders"]
-        for runfolder in all_runfolders:
-            link = runfolder["link"]
-            state = runfolder["state"]
-            if search_term in link and not "rchive" in link and not "biotank" in link:
-                hitcount += 1
-                dirs = link.split('/')
-                folders[hitcount] = dirs[-1]
-                print "{}\t{}\t{}".format(hitcount, state, folders[hitcount])
-
-        if hitcount > 1:
-            choice = int(raw_input("Which runfolder to trace: "))
-        else:
-            choice = 1
-      
-        print "Will trace " + folders[choice]
-
-    # Try to load access token from environment - fall back if not available
-        try:
-            access_token = os.environ['ST2_AUTH_TOKEN']
-        except KeyError as e:
-            print("Could not find ST2_AUTH_TOKEN in environment. Please set it to your st2 authentication token.")
-
-        access_headers = {"X-Auth-Token": access_token}
-
-        traces = get_traces_for_tag(folders[choice], access_headers)
-        executions = get_executions_from_traces(traces, access_headers)
-    #print list(executions)
-        actions = get_actions_from_executions(executions, access_headers)
-        filtered_actions = filter_actions_by_name(actions, workflow_name)
-        sorted_actions = sort_actions_by_timestamp(filtered_actions)
-        for a in sorted_actions:
-            print a["id"]
+    find = get_stuff(args.api_base_url, access_headers, args.noverify, folder2trace)
+    traces = find.get_traces_for_tag()
+    executions = find.get_executions_from_traces()
+    actions = find.get_actions_from_executions(executions)
+    filtered_actions = find.filter_actions_by_name(actions, args.workflow)
+    sorted_actions = find.sort_actions_by_timestamp()
+    
+    print_stackstorm_output(sorted_actions)
+    print "    {} [{}]\n".format(folder2trace, folder_state)
+    
+    sys.exit()
