@@ -29,6 +29,7 @@ workflows:
                 summary_host: <% task(get_config).result.result.summary_host %>
                 summary_user: <% task(get_config).result.result.summary_user %>
                 summary_host_key: <% task(get_config).result.result.summary_host_key %>
+                irma_cert: <% task(get_config).result.result.irma_summary_ssh_cert %>
                 slack_channel: <% task(get_config).result.result.check_cert_slack_channel %>
               on-success:
                  - get_summary_cert_expiry
@@ -37,7 +38,7 @@ workflows:
             get_summary_cert_expiry:
               action: core.remote
               input:
-                cmd: EXPIRE=`ssh-keygen -L -f /home/seqsum/.ssh/mm-xlas002-cert.pub | grep Valid | awk '{print $5 }'` && DIFF=$((`date -d "${EXPIRE}" +%s`-`date +%s`)) && if [ ${DIFF} -lt $((60*60*24*<% $.days %>)) ]; then echo "SSH certificate expires within <% $.days %> days!" && false; fi
+                cmd: EXPIRE=`ssh-keygen -L -f <% $.irma_cert %> | grep Valid | awk '{print $5 }'` && DIFF=$((`date -d "${EXPIRE}" +%s`-`date +%s`)) && if [ ${DIFF} -lt $((60*60*24*<% $.days %>)) ]; then echo "SSH certificate expires within <% $.days %> days!" && false; fi
                 hosts: <% $.summary_host %>
                 username: <% $.summary_user %>
                 private_key: <% $.summary_host_key %>
