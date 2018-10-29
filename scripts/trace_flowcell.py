@@ -8,10 +8,11 @@ import argparse
 from datetime import datetime
 
 class GetStuff:
-    def __init__(self, api_base_url, access_headers, req_verify, tag):
+    def __init__(self, api_base_url, access_headers, req_verify, workflow, tag):
         self.api_base_url = api_base_url
         self.headers = access_headers
         self.verify = req_verify
+        self.workflow = workflow
         self.tag = tag
     
     def get_executions_for_tag(self):
@@ -42,8 +43,8 @@ class GetStuff:
             execution_info = json.loads(execution_info_response.text)
             yield execution_info
     
-    def filter_actions_by_name(self, actions, name):
-        filtered_actions = (action for action in actions if name in action["action"]["name"])
+    def filter_actions_by_name(self, actions):
+        filtered_actions = (action for action in actions if self.workflow in action["action"]["name"])
         def get_start_time(action):
             start_time = datetime.strptime(action['start_timestamp'].split(".")[0], "%Y-%m-%dT%H:%M:%S")
             return start_time
@@ -131,11 +132,11 @@ if __name__ == "__main__":
 
     print "Will trace {}.".format(folder2trace)
 
-    find = GetStuff(args.api_base_url, access_headers, args.noverify, folder2trace)
+    find = GetStuff(args.api_base_url, access_headers, args.noverify, args.workflow, folder2trace)
 #    traces = find.get_traces_for_tag()
     executions = find.get_executions_for_tag()
     actions = find.get_actions_from_executions(executions)
-    sorted_actions = find.filter_actions_by_name(actions, args.workflow)
+    sorted_actions = find.filter_actions_by_name(actions)
 #    sorted_actions = find.sort_actions_by_timestamp()
     
     try:
