@@ -14,18 +14,15 @@ class GetStuff:
         self.verify = req_verify
         self.tag = tag
     
-    def get_traces_for_tag(self):
+    def get_executions_for_tag(self):
         traces_response = requests.get(
             "{}/{}/?{}={}".format(self.api_base_url, "traces", "trace_tag", self.tag),
             verify = self.verify,
             headers = self.headers)
         if not traces_response.ok:
             raise Exception("Response not OK, got: " + traces_response.text)
-        self.traces = json.loads(traces_response.text)
-        return json.loads(traces_response.text)
-    
-    def get_executions_from_traces(self):
-        for trace in self.traces:
+        traces = json.loads(traces_response.text)
+        for trace in traces:
             trace_id = trace["id"]
             trace_info_response = requests.get(
                 "{}/{}/{}".format(self.api_base_url, "traces", trace_id),
@@ -135,8 +132,8 @@ if __name__ == "__main__":
     print "Will trace {}.".format(folder2trace)
 
     find = GetStuff(args.api_base_url, access_headers, args.noverify, folder2trace)
-    traces = find.get_traces_for_tag()
-    executions = find.get_executions_from_traces()
+#    traces = find.get_traces_for_tag()
+    executions = find.get_executions_for_tag()
     actions = find.get_actions_from_executions(executions)
     sorted_actions = find.filter_actions_by_name(actions, args.workflow)
 #    sorted_actions = find.sort_actions_by_timestamp()
