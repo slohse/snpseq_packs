@@ -60,7 +60,6 @@ class Runfolders:
         hosts = cfg['runfolder_svc_urls']
 
         self.hitcount = 0
-        self.outstring = "\n\tstatus\trunfolder_link\n"
         for host in hosts:
             url_base = '/'.join(host.split('/')[:-1])
             result = requests.get("{}?state=*".format(url_base))
@@ -72,6 +71,7 @@ class Runfolders:
         states = {}
         choice = 0
         hitcount = 0
+        outstring = "\n\tstatus\trunfolder_link\n"
         for runfolder in self.all_runfolders:
             link = runfolder["link"]
             state = runfolder["state"]
@@ -80,17 +80,16 @@ class Runfolders:
                 dirs = link.split('/')
                 folders[hitcount] = dirs[-1]
                 states[hitcount] = state
-                self.outstring += "{}\t{}\t{}\n".format(hitcount, state, folders[hitcount])
+                outstring += "{}\t{}\t{}\n".format(hitcount, state, folders[hitcount])
         
-        print self.outstring
-        if hitcount == 0:
-            print "No hits found, will terminate."
-            exit(0)
-        elif hitcount > 1:
-            self.choice = int(raw_input("Which runfolder to trace: "))
+        if hitcount < 1:
+            return 42
+        if hitcount > 1:
+            print outstring
+            choice = int(raw_input("Which runfolder to trace: "))
+            return folders[choice], states[choice]
         else:
-            self.choice = 1
-        return folders[self.choice], states[self.choice]
+            return folders[1], states[1]
 
 
 def print_stackstorm_output(sorted_actions):
@@ -115,6 +114,7 @@ if __name__ == "__main__":
                 "Please set it to your st2 authentication token.")
     access_headers = {"X-Auth-Token": access_token}
         
+    # parse the input
     parser = argparse.ArgumentParser(description="Gets execution ids associated with a flowcell "
                                      "(e.g. a runfolder) and a workflow. It can be used to track "
                                      "executions, e.g: python scripts/trace_flowcell.py "
@@ -126,25 +126,27 @@ if __name__ == "__main__":
     parser.add_argument('--workflow',     default="workflow")
     args = parser.parse_args()
 
-
+    # find the runfolder to trace
     get_runfolder = Runfolders()
-    folder2trace, folder_state = get_runfolder.pick_runfolder(args.flowcell)
-
+    try:
+        folder2trace, folder_state = get_runfolder.pick_runfolder(args.flowcell)
+    except TypeError:
+        print "\n\tNo hits found, will terminate.\n"
+        sys.exit()
     print "Will trace {}.".format(folder2trace)
 
+    # trace the runfolder
     find = GetStuff(args.api_base_url, access_headers, args.noverify, args.workflow, folder2trace)
-#    traces = find.get_traces_for_tag()
     executions = find.get_executions_for_tag()
     actions = find.get_actions_from_executions(executions)
     sorted_actions = find.filter_actions_by_name(actions)
-#    sorted_actions = find.sort_actions_by_timestamp()
     
+    # output the result
     try:
         print_stackstorm_output(sorted_actions)
-    except OSError as w:
-        z = w
+    except OSError:
         print "\nIt looks as if stackstorm [st2] is unavailable. I will just list the IDs:"
-    print_stackstorm_id(sorted_actions)
+        print_stackstorm_id(sorted_actions)
     
     # will add a line with the folder name at the end of the output.
     print "    {} [{}]\n".format(folder2trace, folder_state)
