@@ -7,7 +7,7 @@ import yaml
 import argparse
 from datetime import datetime
 
-class get_stuff:
+class GetStuff:
     def __init__(self, api_base_url, access_headers, req_verify, tag):
         self.api_base_url = api_base_url
         self.headers = access_headers
@@ -56,7 +56,7 @@ class get_stuff:
         return sort_actions
 
 
-class runfolders:
+class Runfolders:
     def __init__(self):
 
         with open(args.config, 'r') as ymlfile:
@@ -75,26 +75,25 @@ class runfolders:
         folders = {}
         states = {}
         choice = 0
+        hitcount = 0
         for runfolder in self.all_runfolders:
-                link = runfolder["link"]
-                state = runfolder["state"]
-                if search_term in link and not "rchive" in link and not "biotank" in link:
-                    self.hitcount += 1
-                    dirs = link.split('/')
-                    folders[self.hitcount] = dirs[-1]
-                    states[self.hitcount] = state
-                    self.outstring += "{}\t{}\t{}\n".format(self.hitcount, state, folders[self.hitcount])
+            link = runfolder["link"]
+            state = runfolder["state"]
+            if search_term in link and not "rchive" in link and not "biotank" in link:
+                hitcount += 1
+                dirs = link.split('/')
+                folders[hitcount] = dirs[-1]
+                states[hitcount] = state
+                self.outstring += "{}\t{}\t{}\n".format(hitcount, state, folders[hitcount])
         
         print self.outstring
-        
-        if self.hitcount == 0:
+        if hitcount == 0:
             print "No hits found, will terminate."
             exit(0)
-        elif self.hitcount > 1:
+        elif hitcount > 1:
             self.choice = int(raw_input("Which runfolder to trace: "))
         else:
             self.choice = 1
-            
         return folders[self.choice], states[self.choice]
 
 
@@ -131,12 +130,13 @@ if __name__ == "__main__":
     parser.add_argument('--workflow',     default="workflow")
     args = parser.parse_args()
 
-    get_runfolder = runfolders()
+
+    get_runfolder = Runfolders()
     folder2trace, folder_state = get_runfolder.pick_runfolder(args.flowcell)
 
     print "Will trace {}.".format(folder2trace)
 
-    find = get_stuff(args.api_base_url, access_headers, args.noverify, folder2trace)
+    find = GetStuff(args.api_base_url, access_headers, args.noverify, folder2trace)
     traces = find.get_traces_for_tag()
     executions = find.get_executions_from_traces()
     actions = find.get_actions_from_executions(executions)
@@ -150,6 +150,7 @@ if __name__ == "__main__":
         print "\nIt looks as if stackstorm [st2] is unavailable. I will just list the IDs:"
     print_stackstorm_id(sorted_actions)
     
+    # will add a line with the folder name at the end of the output.
     print "    {} [{}]\n".format(folder2trace, folder_state)
     
     sys.exit()
