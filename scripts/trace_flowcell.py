@@ -43,11 +43,11 @@ class GetStuff:
             yield execution_info
     
     def filter_actions_by_name(self, actions, name):
-        self.filtered_actions = (action for action in actions if name in action["action"]["name"])
+        filtered_actions = (action for action in actions if name in action["action"]["name"])
         def get_start_time(action):
             start_time = datetime.strptime(action['start_timestamp'].split(".")[0], "%Y-%m-%dT%H:%M:%S")
             return start_time
-        sort_actions = sorted(self.filtered_actions, key = get_start_time)
+        sort_actions = sorted(filtered_actions, key = get_start_time)
         return sort_actions
 
 
