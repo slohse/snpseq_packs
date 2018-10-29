@@ -47,8 +47,6 @@ class GetStuff:
     
     def filter_actions_by_name(self, actions, name):
         self.filtered_actions = (action for action in actions if name in action["action"]["name"])
-
-    def sort_actions_by_timestamp(self):
         def get_start_time(action):
             start_time = datetime.strptime(action['start_timestamp'].split(".")[0], "%Y-%m-%dT%H:%M:%S")
             return start_time
@@ -140,8 +138,8 @@ if __name__ == "__main__":
     traces = find.get_traces_for_tag()
     executions = find.get_executions_from_traces()
     actions = find.get_actions_from_executions(executions)
-    filtered_actions = find.filter_actions_by_name(actions, args.workflow)
-    sorted_actions = find.sort_actions_by_timestamp()
+    sorted_actions = find.filter_actions_by_name(actions, args.workflow)
+#    sorted_actions = find.sort_actions_by_timestamp()
     
     try:
         print_stackstorm_output(sorted_actions)
