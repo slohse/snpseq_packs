@@ -24,6 +24,10 @@ ngi_pipeline_url: https://irma1.uppmax.uu.se:4444/ngi_pipeline_upps
 irma_api_key: aaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 irma_remote_path: ./staging/
 irma_reports_remote_path: ./staging/reports/
+irma_summary_ssh_user: user
+irma_summary_ssh_key: /path/to/ssh/key
+irma_summary_ssh_cert: /path/to/ssh/cert
+irma_summary_host: irma1.uppmax.uu.se
 irma_checksum_base_url: https://irma1.uppmax.uu.se:4444/arteria_checksum_staging/api/1.0
 irma_siswrap_base_url: https://irma1.uppmax.uu.se:4444/arteria_siswrap_staging/api/1.0
 irma_archive_upload_base_url: https://irma1.uppmax.uu.se:4444/arteria_archive_staging/api/1.0

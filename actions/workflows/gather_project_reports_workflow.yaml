@@ -25,6 +25,9 @@ workflows:
                 summary_host_key: <% task(get_config).result.result.summary_host_key %>
                 summary_destination: <% task(get_config).result.result.summary_destination %>
                 irma_remote_path: <% task(get_config).result.result.irma_remote_path %>
+                irma_user: <% task(get_config).result.result.irma_summary_ssh_user %>
+                irma_key: <% task(get_config).result.result.irma_summary_ssh_key %>
+                irma_host: <% task(get_config).result.result.irma_summary_host %>
               on-success:
                  - get_year
 
@@ -63,7 +66,7 @@ workflows:
                 #   potentially leading to us missing real errors.
                 # - Filtering for downstream insertion into the database is carried out by the check_reports_old_enough
                 #   which will only return the runfolders with valid summary reports for processing.
-                cmd: rsync -e "ssh -i /home/seqsum/.ssh/mm-xlas002" -r --times funk_901@irma1.uppmax.uu.se:<% $.irma_remote_path %>/<% $.runfolder %>/Summary <% $.summary_destination %>/<% $.current_year %>/<% $.runfolder %>/; if (( $? == 0 || $? == 23 )) ; then true; else false; fi
+                cmd: rsync -e "ssh -i <% $.irma_key %>" -r --times <% $.irma_user %>@<% $.irma_host %>:<% $.irma_remote_path %>/<% $.runfolder %>/Summary <% $.summary_destination %>/<% $.current_year %>/<% $.runfolder %>/; if (( $? == 0 || $? == 23 )) ; then true; else false; fi
                 hosts: <% $.summary_host %>
                 username: <% $.summary_user %>
                 private_key: <% $.summary_host_key %>
