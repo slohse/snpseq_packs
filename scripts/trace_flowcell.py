@@ -68,7 +68,8 @@ class PickRunfolder:
             url_base = '/'.join(host.split('/')[:-1])
             result = requests.get("{}?state=*".format(url_base))
             result_json = json.loads(result.text)
-            return result_json["runfolders"]
+            for runfolder in result_json["runfolders"]:
+                yield runfolder
 
     def choose_runfolder(self, search_term):
         all_runfolders = self.load_folders()
@@ -96,12 +97,12 @@ class PickRunfolder:
             choice = 1
         return folders[choice], states[choice]
 
-def get_executions(actions):
+def print_executions(actions):
     for a in actions:
         bashCommand = "st2 execution get {}".format(a["id"])
         process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE) 
-        return process.communicate()
-
+        output, error = process.communicate()
+        print output
         
 def print_stackstorm_id(sorted_actions):
     for a in sorted_actions:
@@ -143,8 +144,7 @@ if __name__ == "__main__":
     sorted_actions = myTraces.get_sorted_actions_from_tag(folder2trace)
     
     # output the result
-    output, error = get_executions(sorted_actions)
-    print output
+    print_executions(sorted_actions)
     
     # will add a line with the folder name at the end of the output.
     print "    {} [{}]\n".format(folder2trace, folder_state)
