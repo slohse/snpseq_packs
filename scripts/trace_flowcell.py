@@ -68,7 +68,8 @@ class PickRunfolder:
             url_base = '/'.join(host.split('/')[:-1])
             result = requests.get("{}?state=*".format(url_base))
             result_json = json.loads(result.text)
-            return result_json["runfolders"]
+     for runfolder in result_json["runfolders"]:
+         yield runfolder
 
     def choose_runfolder(self, search_term):
         all_runfolders = self.load_folders()
