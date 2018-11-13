@@ -1,0 +1,13 @@
+---
+name: "check_clarity_contacts_in_supr"
+runner_type: "python-script"
+description: "Looks up project contacts in Clarity LIMS and checks that SUPR accounts are present for their emails"
+enabled: true
+entry_point: "check_clarity_contacts_in_supr.py"
+
+#parameters:
+#  flowcell_name:
+#    type: "string"
+#    description: "Name of the flowcell used to look up the samplesheet in the Clarity LIMS"
+#    required: true
+
