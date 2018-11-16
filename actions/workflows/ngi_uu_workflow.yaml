@@ -325,6 +325,36 @@ workflows:
             #    url: <% $.ngi_pipeline_url %>/<% $.runfolder_name %>
             ## END START NGI_PIPELINE ##
 
+            ## START CLEANUP ##
+
+            # this is a temporary workaround, the permanent fix is here: https://snpseq.atlassian.net/browse/ART-134
+            remove_from_scratch:
+              action: linux.rm
+              input:
+                recursive: true
+                target: /data/scratch/< $.runfolder_name %>
+
+            get_runfolder_base_path:
+              action: core.local
+              input:
+                cmd: dirname "<% $.runfolder %>"
+              publish:
+                runfolder_base_path: "<% task(get_runfolder_base_path).result.stdout %>"
+              on-success:
+                - move_to_archived
+
+            move_to_archived:
+              action: linux.mv
+              parameters:
+                hosts: <% $.host %>
+                source:
+                  - <% $.runfolder %>
+                  - <% $.runfolder %>_archive
+                destination: <% $.runfolder_base_path %>/Arkiverade/
+                private_key: <% $.biotank_user_key %>
+
+            ## END CLEANUP ##
+
             ## NOTIFIER START ###
             notify_finished:
                 action: core.sendmail
@@ -348,6 +378,9 @@ workflows:
                 url: http://<% $.host %>:<% $.runfolder_service_port %>/api/1.0/runfolders/path<% $.runfolder %>
                 body: '{"state": "done"}'
                 method: "POST"
+              on-success:
+                - remove_from_scratch
+                - get_runfolder_base_path
 
             mark_as_failed:
               action: core.http
