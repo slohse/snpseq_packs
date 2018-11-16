@@ -1,0 +1,57 @@
+---
+version: "2.0" # mistral version
+name: snpseq_packs.check_clarity_contacts_in_supr_workflow
+description: Retrieves open projects from ClarityLIMS, checks PI and bioinformatician emails in SUPR for accounts then emails project coordinators/bio with missing accounts.
+
+workflows:
+  main:
+    type: direct
+    tasks:
+
+      note_workflow_version:
+        action: core.local
+        input:
+          cmd: git rev-parse HEAD
+          cwd: /opt/stackstorm/packs/snpseq_packs/
+        on-success:
+          - get_config
+
+      get_config:
+        action: snpseq_packs.get_pack_config
+        publish:
+          supr_api_user: <% task(get_config).result.result.supr_api_user %>
+          supr_api_key: <% task(get_config).result.result.supr_api_key %>
+          supr_api_url: <% task(get_config).result.result.supr_api_url %>
+          project_coordinator_email_adress: <% task(get_config).result.result.project_coordinator_email_adress %>
+          bio_email_adress: <% task(get_config).result.result.send_mail_to %>
+          delivery_workflow_status_slack_channel: <% task(get_config).result.result.delivery_workflow_status_slack_channel %>
+        on-success:
+          - check_clarity_contacts_in_supr
+
+      check_clarity_contacts_in_supr:
+        action: snpseq_packs.check_clarity_contacts_in_supr
+        input:
+          supr_api_user: <% $.supr_api_user %>
+          supr_api_key: <% $.supr_api_key %>
+          supr_base_api_url: <% $.supr_api_url %>
+        publish:
+          missing_in_supr_email: <% task(check_clarity_contacts_in_supr).result.result %>
+        on-success:
+          - email_supr_account_report_project_coord
+          - email_supr_account_report_bio
+            #TODO: Add slack notification as well
+
+      email_supr_account_report_project_coord:
+        action: core.sendmail
+        input: 
+          to: <% $.project_coordinator_email_adress %> 
+          subject: "[SUPR report] - Project contacts without SUPR accounts"
+          body: <% $.missing_in_supr_email %>
+
+      email_supr_account_report_bio:
+        action: core.sendmail
+        input: 
+          to: <% $.end_mail_to %> 
+          subject: "[SUPR report] - Project contacts without SUPR accounts"
+          body: <% $.missing_in_supr_email %>
+
