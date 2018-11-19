@@ -60,6 +60,7 @@ workflows:
                 irma_replace_expressions: <% task(get_config).result.result.irma_replace_expressions %>
                 remote_host_key: <% task(get_config).result.result.remote_host_key %>
                 biotank_user_key: <% task(get_config).result.result.biotank_user_key %>
+                biotank_archive_folder: <% task(get_config).result.result.biotank_archive_folder %>
                 samplesheet_fallback_path: <% task(get_config).result.result.samplesheet_fallback_path %>
               on-success:
                  - mark_as_started
@@ -331,26 +332,18 @@ workflows:
             remove_from_scratch:
               action: linux.rm
               input:
+                hosts: <% $.host %>
+                private_key: <% $.biotank_user_key %>
                 recursive: true
-                target: /data/scratch/< $.runfolder_name %>
-
-            get_runfolder_base_path:
-              action: core.local
-              input:
-                cmd: dirname "<% $.runfolder %>"
-              publish:
-                runfolder_base_path: "<% task(get_runfolder_base_path).result.stdout %>"
-              on-success:
-                - move_to_archived
+                target: /data/scratch/<% $.runfolder_name %>
 
             move_to_archived:
+              with-items: folder in <% list($.runfolder, concat($.runfolder, "_archive")) %>
               action: linux.mv
-              parameters:
+              input:
                 hosts: <% $.host %>
-                source:
-                  - <% $.runfolder %>
-                  - <% $.runfolder %>_archive
-                destination: <% $.runfolder_base_path %>/Arkiverade/
+                source: <% $.folder %>
+                destination: /data/<% $.host %>/<% $.biotank_archive_folder %>
                 private_key: <% $.biotank_user_key %>
 
             ## END CLEANUP ##
@@ -380,7 +373,7 @@ workflows:
                 method: "POST"
               on-success:
                 - remove_from_scratch
-                - get_runfolder_base_path
+                - move_to_archived
 
             mark_as_failed:
               action: core.http

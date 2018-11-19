@@ -1,0 +1,19 @@
+---
+name: "snpseq_packs.purge_archived_biotank_folders"
+pack: "snpseq_packs"
+description: "Permanently removes folders older than a comfigured age from the designated archive folder on the biotanks"
+enabled: true
+
+trigger:
+    type: "core.st2.CronTimer"
+    parameters:
+      timezone: "UTC"
+      day_of_week: "sat"
+      hour: 15
+      minute: 0
+      second: 0
+
+action:
+    ref: "snpseq_packs.purge_archived_biotank_folders_workflow"
+    parameters:
+      dryrun: false

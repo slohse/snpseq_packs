@@ -1,0 +1,25 @@
+---
+name: purge_archived_biotank_folders_workflow
+description: >
+  Permanently removes folders older than a comfigured age from the designated archive folder on the biotanks
+enabled: true
+runner_type: mistral-v2
+entry_point: workflows/purge_archived_biotank_folders_workflow.yaml
+pack: snpseq_packs
+parameters:
+  context:
+    default: {}
+    immutable: true
+    type: object
+  workflow:
+    default: snpseq_packs.purge_archived_biotank_folders_workflow
+    immutable: true
+    type: string
+  age_in_days:
+    default: 30
+    type: integer
+    description: "files and folders older than the specified number of days will be permanently removed from the configured location on the biotanks"
+  dryrun:
+    default: true
+    type: boolean
+    description: "DRY-RUN - only list folders to be purged by workflow"
