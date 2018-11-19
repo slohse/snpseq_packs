@@ -31,9 +31,9 @@ workflows:
       check_clarity_contacts_in_supr:
         action: snpseq_packs.check_clarity_contacts_in_supr
         input:
+          supr_api_url: <% $.supr_api_url %>
           supr_api_user: <% $.supr_api_user %>
           supr_api_key: <% $.supr_api_key %>
-          supr_base_api_url: <% $.supr_api_url %>
         publish:
           missing_in_supr_email: <% task(check_clarity_contacts_in_supr).result.result %>
         on-success:
@@ -51,7 +51,7 @@ workflows:
       email_supr_account_report_bio:
         action: core.sendmail
         input: 
-          to: <% $.end_mail_to %> 
+          to: <% $.send_mail_to %> 
           subject: "[SUPR report] - Project contacts without SUPR accounts"
           body: <% $.missing_in_supr_email %>
 

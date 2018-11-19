@@ -6,8 +6,19 @@ enabled: true
 entry_point: "check_clarity_contacts_in_supr.py"
 
 #parameters:
-#  flowcell_name:
+#  supr_api_url:
 #    type: "string"
-#    description: "Name of the flowcell used to look up the samplesheet in the Clarity LIMS"
+#    description: "Base URL of the SUPR API"
 #    required: true
+
+#  supr_api_user:
+#   type: "string"
+#   description: "Username for the SUPR API"
+#   required: true
+
+#  supr_api_key:
+#    type: "string"
+#    desription: "Password for the SUPR API"
+#    required: true
+#    secret: true
 
