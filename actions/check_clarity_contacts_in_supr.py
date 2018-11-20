@@ -33,7 +33,7 @@ class CheckClarityContactsInSupr(Action):
         email_multi = False
 
         try:
-            pi_id = SuprUtils.search_by_email(self.supr_base_url, email_adress, self.supr_user, self.supr_key)
+            supr_id = SuprUtils.search_by_email(self.supr_base_url, email_adress, self.supr_user, self.supr_key)
         except AssertionError as ae:
             if ("no hits" in ae.message):
                 email_missing = True
@@ -42,11 +42,7 @@ class CheckClarityContactsInSupr(Action):
 
         return (email_missing, email_multi)
 
-    def run(self): #supr_base_url, supr_user, supr_key
-        #TODO:debug vars, remove
-	supr_base_url = "https://supr.snic.se/api"
-	supr_user = "api-2"
-	supr_key= "Acgxd6Hvns"
+    def run(self, supr_base_url, supr_user, supr_key):
 
         self.supr_base_url = supr_base_url
         self.supr_user = supr_user
@@ -54,25 +50,24 @@ class CheckClarityContactsInSupr(Action):
 
         projects = self.fetch_open_projects()
 	email_body = ""
-        debug_break = 30 #TODO: remove
 	for project in projects:
             pi_missing = False
             pi_multi = False
             bio_missing = False
             bio_multi = False
 
-            debug_break =- 1        #TODO: remove
-            if (debug_break == 0):
-                break
-
             pi_email = project.udf.get("Email of PI")
             bio_email = project.udf.get("Email of bioinformatics responsible person")
             #primary_email = project.udf.get("Email of primary contact")
+
             if (pi_email):
+		pi_email = pi_email.strip()
                 (pi_missing, pi_multi) = self.check_email_in_supr(pi_email) 
   
             if (bio_email):
+		bio_email = bio_email.strip()
                 (bio_missing, bio_multi) = self.check_email_in_supr(bio_email)
+
  
             if (pi_missing or pi_multi or bio_missing or bio_multi):
                 pi_name = project.udf.get("Name of PI")

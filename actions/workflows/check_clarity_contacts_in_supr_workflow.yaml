@@ -39,7 +39,6 @@ workflows:
         on-success:
           - email_supr_account_report_project_coord
           - email_supr_account_report_bio
-            #TODO: Add slack notification as well
 
       email_supr_account_report_project_coord:
         action: core.sendmail
