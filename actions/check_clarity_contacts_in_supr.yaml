@@ -5,20 +5,20 @@ description: "Looks up project contacts in Clarity LIMS and checks that SUPR acc
 enabled: true
 entry_point: "check_clarity_contacts_in_supr.py"
 
-#parameters:
-#  supr_api_url:
-#    type: "string"
-#    description: "Base URL of the SUPR API"
-#    required: true
+parameters:
+  supr_api_url:
+    type: "string"
+    description: "Base URL of the SUPR API"
+    required: true
 
-#  supr_api_user:
-#   type: "string"
-#   description: "Username for the SUPR API"
-#   required: true
+  supr_api_user:
+   type: "string"
+   description: "Username for the SUPR API"
+   required: true
 
-#  supr_api_key:
-#    type: "string"
-#    desription: "Password for the SUPR API"
-#    required: true
-#    secret: true
+  supr_api_key:
+    type: "string"
+    desription: "Password for the SUPR API"
+    required: true
+    secret: true
 
