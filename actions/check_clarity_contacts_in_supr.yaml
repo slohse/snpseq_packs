@@ -18,7 +18,7 @@ parameters:
 
   supr_api_key:
     type: "string"
-    desription: "Password for the SUPR API"
+    description: "Password for the SUPR API"
     required: true
     secret: true
 
