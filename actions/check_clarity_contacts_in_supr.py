@@ -33,7 +33,7 @@ class CheckClarityContactsInSupr(Action):
         email_multi = False
 
         try:
-            supr_id = SuprUtils.search_by_email(self.supr_base_url, email_adress, self.supr_user, self.supr_key)
+            supr_id = SuprUtils.search_by_email(self.supr_api_url, email_adress, self.supr_api_user, self.supr_api_key)
         except AssertionError as ae:
             if ("no hits" in ae.message):
                 email_missing = True
@@ -42,11 +42,11 @@ class CheckClarityContactsInSupr(Action):
 
         return (email_missing, email_multi)
 
-    def run(self, supr_base_url, supr_user, supr_key):
+    def run(self, supr_api_url, supr_api_user, supr_api_key):
 
-        self.supr_base_url = supr_base_url
-        self.supr_user = supr_user
-        self.supr_key = supr_key
+        self.supr_api_url = supr_api_url
+        self.supr_api_user = supr_api_user
+        self.supr_api_key = supr_api_key
 
         projects = self.fetch_open_projects()
 	email_body = ""
