@@ -21,11 +21,11 @@ class CheckClarityContactsInSupr(Action):
     def fetch_open_projects(self):
         lims = Lims(BASEURI, USERNAME, PASSWORD)
         lims.check_version()
-        projects = lims.get_projects() 
-	filtered_projects = list()
-	for project in projects:
-		if project.open_date and not project.close_date:
-			filtered_projects.append(project)
+        projects = lims.get_projects()
+        filtered_projects = list()
+        for project in projects:
+            if project.open_date and not project.close_date:
+                filtered_projects.append(project)
         return filtered_projects
 
     def check_email_in_supr(self, email_adress):
@@ -49,45 +49,16 @@ class CheckClarityContactsInSupr(Action):
         self.supr_api_key = supr_api_key
 
         projects = self.fetch_open_projects()
-	email_body = ""
-	for project in projects:
-            pi_missing = False
-            pi_multi = False
-            bio_missing = False
-            bio_multi = False
-
-            pi_email = project.udf.get("Email of PI")
-            bio_email = project.udf.get("Email of bioinformatics responsible person")
-            #primary_email = project.udf.get("Email of primary contact")
-
-            if (pi_email):
-		pi_email = pi_email.strip()
-                (pi_missing, pi_multi) = self.check_email_in_supr(pi_email) 
-  
-            if (bio_email):
-		bio_email = bio_email.strip()
-                (bio_missing, bio_multi) = self.check_email_in_supr(bio_email)
-
- 
-            if (pi_missing or pi_multi or bio_missing or bio_multi):
-                pi_name = project.udf.get("Name of PI")
-                if (not pi_name):
-                    pi_name = "Name missing from LIMS"
-                bio_name = project.udf.get("Name of bioinformatics responsible person")
-                if (not bio_name):
-                    bio_name = "Name missing from LIMS"
-                email_body += "<hr>Project: " + project.name + ": <br><br>"
-
-                if (pi_missing):
-                    email_body += "PI missing from SUPR ( " + pi_name + ", " + pi_email + " )<br>"
-                if (pi_multi):
-                    email_body += "PI has multiple accounts in SUPR ( " + pi_name + ", " + pi_email + " )<br>"
-                if (bio_missing):
-                    email_body += "BIO missing from SUPR ( " + bio_name + ", " + bio_email + " )<br>"
-                if (bio_multi):
-                    email_body += "BIO has multiple accounts in SUPR ( " + bio_name + ", " + bio_email + " )<br>"
+        email_body = ""
+        for project in projects:
+            roles = ["PI", "bioinformatics responsible person"]
+            for role in roles:
+                email = project.udf.get("Email of {}".format(role)) or continue
+                (account_missing, multiple_accounts) = self.check_email_in_supr(email.strip())
+                if not account_missing or multiple_accounts:
+                    continue
+                name = project.udf.get("Name of {}".format(role)) or "Name missing from LIMS"
+                email_body += "{} {} SUPR {}<br>".format(role, "missing from" if account_missing else "has multiple accounts in", "( {}, {} )".format(name, email))
 
         return (True, email_body)
-
-
 

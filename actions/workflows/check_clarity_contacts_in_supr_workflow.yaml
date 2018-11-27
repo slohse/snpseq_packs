@@ -37,8 +37,8 @@ workflows:
         publish:
           missing_in_supr_email: <% task(check_clarity_contacts_in_supr).result.result %>
         on-success:
-          - email_supr_account_report_project_coord
-          - email_supr_account_report_bio
+          - email_supr_account_report_project_coord: <% $.missing_in_supr_email != '' %>
+          - email_supr_account_report_bio: <% $.missing_in_supr_email != '' %>
 
       email_supr_account_report_project_coord:
         action: core.sendmail

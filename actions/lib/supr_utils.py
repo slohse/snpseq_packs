@@ -4,10 +4,6 @@ import math
 from datetime import date
 from dateutil.relativedelta import relativedelta
 
-# Needs to be run in a Stackstorm virtualenv
-from st2actions.runners.pythonrunner import Action
-
-
 class SuprUtils:
 
     DATE_FORMAT = '%Y-%m-%d'
