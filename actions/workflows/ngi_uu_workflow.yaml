@@ -160,7 +160,7 @@ workflows:
                     barcode_mismatches: "<% $.barcode_mismatches %>"
                     tiles: "<% $.tiles %>"
                     use_base_mask: "<% $.use_base_mask %>"
-                    additional_arguments: "<% $.bcl2fastq_additional_arguments %>"
+                    additional_args: "<% $.bcl2fastq_additional_arguments %>"
                     create_indexes: "True"
                 publish:
                     bcl2fastq_body: <% task(construct_bcl2fastq_body).result.result %>
