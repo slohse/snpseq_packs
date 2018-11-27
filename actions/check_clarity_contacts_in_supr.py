@@ -53,12 +53,14 @@ class CheckClarityContactsInSupr(Action):
         for project in projects:
             roles = ["PI", "bioinformatics responsible person"]
             for role in roles:
-                email = project.udf.get("Email of {}".format(role)) or continue
+                email = project.udf.get("Email of {}".format(role))
+                if not email:
+                    continue
                 (account_missing, multiple_accounts) = self.check_email_in_supr(email.strip())
-                if not account_missing or multiple_accounts:
+                if not (account_missing or multiple_accounts):
                     continue
                 name = project.udf.get("Name of {}".format(role)) or "Name missing from LIMS"
-                email_body += "{} {} SUPR {}<br>".format(role, "missing from" if account_missing else "has multiple accounts in", "( {}, {} )".format(name, email))
+                email_body += "{} {} SUPR {}<br><hr>".format(role, "missing from" if account_missing else "has multiple accounts in", "( {}, {} )".format(name, email))
 
         return (True, email_body)
 
