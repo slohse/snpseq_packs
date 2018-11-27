@@ -60,7 +60,7 @@ class CheckClarityContactsInSupr(Action):
                 if not (account_missing or multiple_accounts):
                     continue
                 name = project.udf.get("Name of {}".format(role)) or "Name missing from LIMS"
-                email_body += "{}: {} {} SUPR {}<br>".format(project.name, role, "missing from" if account_missing else "has multiple accounts in", "( {}, {} )".format(name, email))
+                email_body += "{}: {} {} SUPR {}<br><hr>".format(project.name, role, "missing from" if account_missing else "has multiple accounts in", "( {}, {} )".format(name, email))
 
         return (True, email_body)
 
