@@ -1,12 +1,14 @@
 import mock
 import json
 
-import supr
+import lib.supr_utils
+
 from st2tests.base import BaseActionTestCase
 
 
 class SuprTestCase(BaseActionTestCase):
-    action_cls = supr.Supr
+    #action_cls = supr.Supr
+    action_cls = lib.supr_utils.SuprUtils
 
     class MockPostResponse:
         def __init__(self, content, status_code=200):
@@ -49,7 +51,7 @@ class SuprTestCase(BaseActionTestCase):
         staging_info = {proj: {"size": 1e12} for proj in self.project_to_email_dict.keys()}
         project_info = dict(self.project_to_email_dict)
         return [
-            supr.Supr.create_delivery_project(
+            lib.supr_utils.SuprUtils.create_delivery_project(
                 self.supr_base_url, project_names_and_ids, staging_info, project_info, self.api_user, self.api_key),
             project_names_and_ids,
             staging_info,
@@ -57,7 +59,7 @@ class SuprTestCase(BaseActionTestCase):
 
     def test_create_delivery_project(self):
         with mock.patch.object(
-            supr.requests,
+            lib.supr_utils.requests,
             'post',
             side_effect=SuprTestCase.post_mock_reponse
         ) as post_mock:
@@ -72,7 +74,7 @@ class SuprTestCase(BaseActionTestCase):
 
     def test_create_delivery_project_fail(self):
         with mock.patch.object(
-            supr.requests,
+            lib.supr_utils.requests,
             'post',
             return_value=SuprTestCase.MockPostResponse("some fail content", status_code=400)
         ) as post_mock:
@@ -81,8 +83,8 @@ class SuprTestCase(BaseActionTestCase):
 
     def test_search_for_pis(self):
         with mock.patch.object(
-                supr.Supr, "search_by_email", side_effect=SuprTestCase.mock_pi_id) as search_mock:
-            observed_ids = supr.Supr.search_for_pi_and_members(
+                lib.supr_utils.SuprUtils, "search_by_email", side_effect=SuprTestCase.mock_pi_id) as search_mock:
+            observed_ids = lib.supr_utils.SuprUtils.search_for_pi_and_members(
                 self.project_to_email_dict,
                 self.supr_base_url,
                 self.api_user,

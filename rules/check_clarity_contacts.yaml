@@ -1,0 +1,19 @@
+---
+name: "snpseq_packs.check_clarity_contacts"
+pack: "snpseq_packs"
+description: "Checks ClarityLIMS project contacts for SUPR accounts, emails project coordinators and BIO if not present"
+enabled: true
+
+trigger:
+    type: "core.st2.CronTimer"
+    parameters:
+      timezone: "UTC"
+      day_of_week: "mon"
+      hour: 6
+      minute: 0
+      second: 0
+
+action:
+  ref: "snpseq_packs.check_clarity_contacts_in_supr_workflow"
+
+

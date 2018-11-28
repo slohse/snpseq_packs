@@ -1,0 +1,24 @@
+---
+name: "check_clarity_contacts_in_supr"
+runner_type: "python-script"
+description: "Looks up project contacts in Clarity LIMS and checks that SUPR accounts are present for their emails"
+enabled: true
+entry_point: "check_clarity_contacts_in_supr.py"
+
+parameters:
+  supr_api_url:
+    type: "string"
+    description: "Base URL of the SUPR API"
+    required: true
+
+  supr_api_user:
+   type: "string"
+   description: "Username for the SUPR API"
+   required: true
+
+  supr_api_key:
+    type: "string"
+    description: "Password for the SUPR API"
+    required: true
+    secret: true
+

@@ -1,0 +1,16 @@
+---
+name: check_clarity_contacts_in_supr_workflow 
+description: Check if ClarityLIMS contacts have SUPR accounts, and email if not
+enabled: true
+runner_type: mistral-v2
+entry_point: workflows/check_clarity_contacts_in_supr_workflow.yaml
+pack: snpseq_packs
+parameters:
+  context:
+    default: {}
+    immutable: true
+    type: object
+  workflow:
+    default: snpseq_packs.check_clarity_contacts_in_supr_workflow
+    immutable: true
+    type: string
