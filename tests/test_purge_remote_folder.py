@@ -29,9 +29,15 @@ class TestPurgeRemoteFolders(unittest.TestCase):
             mtime = atime if tfile.startswith("too_new") else \
                 self._to_unix_timestamp(datetime.date.today() - datetime.timedelta(days=(self.age_in_days + 1)))
             os.utime(os.path.join(self.directory, tfile), (atime, mtime))
-        self.logger = mock.MagicMock(spec=logging.Logger)
-        self.action = PurgeRemoteFolders(os.path.basename(self.directory), self.age_in_days, self.dryrun, self.logger)
+        self.execution_id = "this-is-an-execution-id"
+        self.action = self.get_instance(
+            os.path.basename(self.directory), self.age_in_days, self.dryrun, self.execution_id)
         self.action.archive_base_dir = self.directory
+
+    def get_instance(self, *args):
+        inst = PurgeRemoteFolders(*args)
+        inst.log = mock.MagicMock(spec=logging.Logger)
+        return inst
 
     def tearDown(self):
         shutil.rmtree(self.directory, ignore_errors=True)
@@ -68,31 +74,31 @@ class TestPurgeRemoteFolders(unittest.TestCase):
         self.assertListEqual(expected_files_and_folders, observed_files_and_folders)
 
     def test_purge_files_and_folders(self):
-        self.action.purge_files_and_folders(self.files, self.logger)
+        self.action.purge_files_and_folders(self.files)
         self.assertTrue(all(map(lambda p: os.path.exists(os.path.join(self.directory, p)), self.files)))
         self.action.dryrun = False
-        self.action.purge_files_and_folders(self.files, self.logger)
+        self.action.purge_files_and_folders(self.files)
         self.assertFalse(any(map(lambda p: os.path.exists(os.path.join(self.directory, p)), self.files)))
-        self.action.purge_files_and_folders([""], self.logger)
+        self.action.purge_files_and_folders([""])
         self.assertFalse(os.path.exists(self.directory))
 
     def test_run(self):
         directory_pattern = os.path.join("path", "to", "archive")
         expected_directory = os.path.join("/data", socket.gethostname(), directory_pattern)
         expected_output = filter(lambda p: p.startswith("too_old"), self.files)
-        self.action = PurgeRemoteFolders(directory_pattern, self.age_in_days, self.dryrun)
+        self.action = self.get_instance(directory_pattern, self.age_in_days, self.dryrun, self.execution_id)
         self.assertEqual(expected_directory, self.action.archive_base_dir)
         with mock.patch.object(
                 self.action, 'get_files_and_folders') as get_files_and_folders, mock.patch.object(
                 self.action, 'purge_files_and_folders') as purge_files_and_folders:
             get_files_and_folders.return_value = expected_output
-            observed_output = self.action.purge(self.logger)
+            observed_output = self.action.purge()
             self.assertListEqual(expected_output, observed_output)
             get_files_and_folders.assert_called_once_with()
-            purge_files_and_folders.assert_called_once_with(expected_output, self.logger)
+            purge_files_and_folders.assert_called_once_with(expected_output)
 
             # also, ensure that exceptions are handled properly
             purge_files_and_folders.side_effect = IOError("key error raised by mock")
-            self.assertRaises(IOError, self.action.purge, self.logger)
+            self.assertRaises(IOError, self.action.purge)
             get_files_and_folders.side_effect = ValueError("value error raised by mock")
-            self.assertRaises(ValueError, self.action.purge, self.logger)
+            self.assertRaises(ValueError, self.action.purge)
