@@ -1,7 +1,7 @@
 ---
 name: purge_archived_biotank_folders_workflow
 description: >
-  Permanently removes folders older than a comfigured age from the designated archive folder on the biotanks
+  Permanently removes folders older than a configured age from the designated archive folder on the biotanks
 enabled: true
 runner_type: mistral-v2
 entry_point: workflows/purge_archived_biotank_folders_workflow.yaml

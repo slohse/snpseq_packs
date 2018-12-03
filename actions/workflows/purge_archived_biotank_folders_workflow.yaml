@@ -1,6 +1,6 @@
 version: "2.0" # mistral version
 name: snpseq_packs.purge_archived_biotank_folders_workflow
-description: The ngi workflow, from sequencer to remote system...
+description: Permanently removes folders older than a supplied age from the configured archive folder on the biotanks
 
 workflows:
     main:

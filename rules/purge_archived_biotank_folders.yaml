@@ -1,7 +1,7 @@
 ---
 name: "snpseq_packs.purge_archived_biotank_folders"
 pack: "snpseq_packs"
-description: "Permanently removes folders older than a comfigured age from the designated archive folder on the biotanks"
+description: "Permanently removes folders older than a configured age from the designated archive folder on the biotanks"
 enabled: true
 
 trigger:
