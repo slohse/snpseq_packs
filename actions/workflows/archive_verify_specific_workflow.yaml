@@ -1,5 +1,5 @@
 version: "2.0" # mistral version
-name: snpseq_packs.archive_verify_specific
+name: snpseq_packs.archive_verify_specific_workflow
 description: Verify a specific runfolder archive that was uploaded to PDC
 
 workflows:
@@ -52,7 +52,7 @@ workflows:
                 - verify_archive_dir
 
             verify_archive_dir:
-              action: snpseq_packs.poll_status-archive
+              action: snpseq_packs.poll_status
               input:
                 url: <% $.archive_verify_base_url %>/verify
                 body: <% $.verify_body %>

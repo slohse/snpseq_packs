@@ -1,9 +1,9 @@
 ---
-name: check_irma_certs
-description: Warn if Irma SSH certs are soon to expire 
+name: check_irma_certs_workflow
+description: Warn if Irma SSH certs are soon to expire
 enabled: true
 runner_type: mistral-v2
-entry_point: workflows/check_irma_certs.yaml
+entry_point: workflows/check_irma_certs_workflow.yaml
 pack: snpseq_packs
 parameters:
   context:
@@ -11,7 +11,7 @@ parameters:
     immutable: true
     type: object
   workflow:
-    default: snpseq_packs.check_irma_certs
+    default: snpseq_packs.check_irma_certs_workflow
     immutable: true
     type: string
   days:

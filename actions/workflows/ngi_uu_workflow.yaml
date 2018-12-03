@@ -89,11 +89,42 @@ workflows:
                 publish:
                     flowcell_name: <% task(get_flowcell_name).result.result %>
                 on-success:
-                    - download_samplesheet_mount: <% $.skip_download_samplesheet_mount = false %>
-                    - download_samplesheet_clarity: <% $.skip_download_samplesheet_mount = true %>
+                    - get_year
+
+            get_year:
+              action: core.local
+              input:
+                cmd: echo 20$(echo <% $.runfolder_name %> | cut -c1-2)
+              publish:
+                current_year: <% task(get_year).result.stdout %>
+              on-success:
+                - rsync_to_summary_host_before_demultiplexing
 
             ### GENERAL TASKS END ###
             ### DEMULTIPLEX START ###
+            rsync_to_summary_host_before_demultiplexing:
+                action: snpseq_packs.rsync
+                input:
+                    source: <% $.runfolder %>
+                    source_host: <% $.host %>
+                    source_host_user: "arteria"
+                    dest_server: <% $.summary_host %>
+                    dest_user: <% $.summary_user %>
+                    destination: <% $.summary_destination %>/<% $.current_year %>
+                    include_file: /etc/arteria/misc/summary.rsync
+                on-success:
+                    - create_lims_integration_links
+
+            create_lims_integration_links:
+                action: core.remote
+                input:
+                    cmd: ln -n -s -f <% $.summary_destination %>/<% $.current_year %>/<% $.runfolder_name %> <% $.summary_destination %>/LIMS-integration/<% $.runfolder_name %>
+                    hosts: <% $.summary_host %>
+                    username: <% $.summary_user %>
+                    private_key: <% $.summary_host_key %>
+                on-success:
+                    - download_samplesheet_mount: <% $.skip_download_samplesheet_mount = false %>
+                    - download_samplesheet_clarity: <% $.skip_download_samplesheet_mount = true %>
 
             download_samplesheet_mount:
                 action: snpseq_packs.download_samplesheet_mount
@@ -111,7 +142,7 @@ workflows:
                 action: snpseq_packs.download_samplesheet_clarity
                 input:
                     flowcell_name: <% $.flowcell_name %>
-                
+
                 #Add parameter for server or use dev/prod file based authentication/server selection?
                 publish:
                     samplesheet_string: "<% task(download_samplesheet_clarity).result.result %>"
@@ -129,7 +160,7 @@ workflows:
                     barcode_mismatches: "<% $.barcode_mismatches %>"
                     tiles: "<% $.tiles %>"
                     use_base_mask: "<% $.use_base_mask %>"
-                    additional_arguments: "<% $.bcl2fastq_additional_arguments %>"
+                    additional_args: "<% $.bcl2fastq_additional_arguments %>"
                     create_indexes: "True"
                 publish:
                     bcl2fastq_body: <% task(construct_bcl2fastq_body).result.result %>
@@ -182,20 +213,11 @@ workflows:
                       runfolder: <% $.runfolder_name %>
                     ignore_result: <% $.ignore_qc_result %>
                 on-success:
-                    - get_year: <% task(run_checkqc).state = 'SUCCESS'  %>
+                    - rsync_to_summary_host: <% task(run_checkqc).state = 'SUCCESS'  %>
                     - oh_shit_error: <% task(run_checkqc).state = 'ERROR' %>
                     - mark_as_failed: <% task(run_checkqc).state = 'ERROR' %>
             ### CHECK INDICES END###
             ### TRANSFER FILES TO UPPMAX START ###
-            get_year:
-              action: core.local
-              input:
-                cmd: echo 20$(echo <% $.runfolder_name %> | cut -c1-2)
-              publish:
-                current_year: <% task(get_year).result.stdout %>
-              on-success:
-                - rsync_to_summary_host
-
             rsync_to_summary_host:
                 action: snpseq_packs.rsync
                 input:
@@ -220,6 +242,9 @@ workflows:
                 current_year: "<% $.current_year %>"
                 runfolder_name: "<% $.runfolder_name %>"
                 private_key: <% $.summary_host_key %>
+                env:
+                  LANG: "en_US.UTF-8"
+                  LC_ALL: "en_US.UTF-8"
               on-success:
                 - rsync_to_irma
 
@@ -247,9 +272,24 @@ workflows:
                     verify_ssl_cert: True
                     irma_mode: True
                 on-success:
+                  - upload_runfolder_to_pdc: <% $.skip_archiving = false %>
                   - irma_run_aeacus_stats
 
             ### TRANSFER FILES TO UPPMAX END ###
+
+            ## START TSM ARCHIVE TO PDC ##
+
+            upload_runfolder_to_pdc:
+                action: snpseq_packs.archive_upload_workflow
+                input:
+                    runfolder: <% $.runfolder_name %>
+                    host: <% $.host %>
+                    remove_previous_archive: <% $.remove_previous_archive_dir %>
+                on-success:
+                  - notify_finished
+                  - mark_as_finished
+
+            ## END TSM ARCHIVE TO PDC ##
 
             ### START AEACUS REPORT STEPS ###
             irma_run_aeacus_stats:
@@ -272,9 +312,8 @@ workflows:
                   verify_ssl_cert: True
                   irma_mode: True
                on-success:
-                - upload_runfolder_to_pdc: <% $.skip_archiving = false %>
-                - notify_finished: <% $.skip_archiving = true %>
-                - mark_as_finished: <% $.skip_archiving = true %>
+                 - notify_finished: <% $.skip_archiving = true %>
+                 - mark_as_finished: <% $.skip_archiving = true %>
 
             ### END AEACUS REPORT STEPS ###
 
@@ -285,20 +324,6 @@ workflows:
             #  input:
             #    url: <% $.ngi_pipeline_url %>/<% $.runfolder_name %>
             ## END START NGI_PIPELINE ##
-
-            ## START TSM ARCHIVE TO PDC ##
-
-            upload_runfolder_to_pdc:
-                action: snpseq_packs.archive_upload
-                input:
-                    runfolder: <% $.runfolder_name %>
-                    host: <% $.host %>
-                    remove_previous_archive: <% $.remove_previous_archive_dir %>
-                on-success:
-                  - notify_finished
-                  - mark_as_finished
-
-            ## END TSM ARCHIVE TO PDC ##
 
             ## NOTIFIER START ###
             notify_finished:
