@@ -29,9 +29,9 @@ class TestPurgeRemoteFolders(unittest.TestCase):
             mtime = atime if tfile.startswith("too_new") else \
                 self._to_unix_timestamp(datetime.date.today() - datetime.timedelta(days=(self.age_in_days + 1)))
             os.utime(os.path.join(self.directory, tfile), (atime, mtime))
-        self.action = PurgeRemoteFolders(os.path.basename(self.directory), self.age_in_days, self.dryrun)
-        self.action.directory = self.directory
         self.logger = mock.MagicMock(spec=logging.Logger)
+        self.action = PurgeRemoteFolders(os.path.basename(self.directory), self.age_in_days, self.dryrun, self.logger)
+        self.action.archive_base_dir = self.directory
 
     def tearDown(self):
         shutil.rmtree(self.directory, ignore_errors=True)
@@ -81,7 +81,7 @@ class TestPurgeRemoteFolders(unittest.TestCase):
         expected_directory = os.path.join("/data", socket.gethostname(), directory_pattern)
         expected_output = filter(lambda p: p.startswith("too_old"), self.files)
         self.action = PurgeRemoteFolders(directory_pattern, self.age_in_days, self.dryrun)
-        self.assertEqual(expected_directory, self.action.directory)
+        self.assertEqual(expected_directory, self.action.archive_base_dir)
         with mock.patch.object(
                 self.action, 'get_files_and_folders') as get_files_and_folders, mock.patch.object(
                 self.action, 'purge_files_and_folders') as purge_files_and_folders:
