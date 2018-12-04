@@ -1,0 +1,21 @@
+---
+name: purge_remote_folder
+description: Permanently removes files and folders older than the specified age from the configured archive folder
+enabled: true
+runner_type: remote-shell-script
+entry_point: lib/purge_remote_folder.py
+pack: snpseq_packs
+parameters:
+  biotank_archive_folder:
+    type: 'string'
+    required: true
+    description: Path to the folder for archived runfolders, relative to the host-specific data path
+  age_in_days:
+    type: 'integer'
+    description: Files and folders that haven't been modified in this many days will be removed
+    required: true
+  dryrun:
+    type: 'boolean'
+    description: If true, only a dry-run will be performed and nothing is removed
+    required: false
+    default: true

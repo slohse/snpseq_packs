@@ -12,6 +12,10 @@ projman_connection_string: mssql+pymssql://<username>:<password>@<host>/<databas
 biotank_hosts: mm-xart002,mm-xart003
 biotank_user: arteria
 biotank_user_key: "/path/to/ssh/key"
+# the path to the archive folder, relative to the /data/biotankX/ folder
+biotank_archive_folder: relative/path/to/archive/folder
+days_to_keep_archived_runfolder: 30
+samplesheet_fallback_path: /path/to/samplesheet/fallback/location
 
 remote_host: testuppmax
 remote_user: arteria
