@@ -42,6 +42,18 @@ biotank_user_key:
   description: "Path to user's ssh key"
   type: "string"
   required: true
+biotank_archive_folder:
+  description: "Path to the archive folder _relative_ to /data/<hostname>"
+  type: "string"
+  required: true
+days_to_keep_archived_runfolder:
+  description: "Number of days to retain the folder before automatic removal"
+  type: "integer"
+  required: true
+samplesheet_fallback_path:
+  description: "Path to the samplesheet fallback location"
+  type: "string"
+  required: true
 remote_host:
   description: "Host to upload runfolders to"
   type: "string"

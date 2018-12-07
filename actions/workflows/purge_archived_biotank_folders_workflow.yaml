@@ -1,0 +1,77 @@
+version: "2.0" # mistral version
+name: snpseq_packs.purge_archived_biotank_folders_workflow
+description: Permanently removes folders older than a supplied age from the configured archive folder on the biotanks
+
+workflows:
+    main:
+        type: direct
+        input:
+          - age_in_days
+          - dryrun
+        output:
+            output_the_whole_workflow_context: <% $ %>
+        task-defaults:
+            on-error:
+                - oh_shit_error
+
+        tasks:
+            ### GENERAL TASKS START ###
+            note_workflow_repo_version:
+              action: core.local
+              input:
+                cmd: git rev-parse HEAD
+                cwd: /opt/stackstorm/packs/snpseq_packs/
+              on-success:
+                - get_config
+
+            get_config:
+              action: snpseq_packs.get_pack_config
+              publish:
+                send_mail_to: <% task(get_config).result.result.send_mail_to %>
+                biotank_user_key: <% task(get_config).result.result.biotank_user_key %>
+                biotank_hosts: <% task(get_config).result.result.biotank_hosts %>
+                biotank_user: <% task(get_config).result.result.biotank_user %>
+                biotank_archive_folder: <% task(get_config).result.result.biotank_archive_folder %>
+                age_in_days: <% task(get_config).result.result.days_to_keep_archived_runfolder %>
+              on-success:
+                - purge_archived
+
+            purge_archived:
+              action: snpseq_packs.purge_remote_folder
+              input:
+                username: <% $.biotank_user %>
+                hosts: <% $.biotank_hosts %>
+                private_key: <% $.biotank_user_key %>
+                biotank_archive_folder: <% $.biotank_archive_folder %>
+                age_in_days: <% $.age_in_days %>
+                dryrun: <% $.dryrun %>
+              publish:
+                purged: <% task(purge_archived).result %>
+              on-success:
+                - message_body
+
+            message_body:
+              with-items: bt_host in <% $.purged.keys() %>
+              action: core.local
+              input:
+                cmd: echo "<% $.bt_host %>"; echo ""; echo "    <% $.purged.get($.bt_host, dict()).stdout.join("\n    ") %>"
+              publish:
+                message_body: <% task(message_body).result.select($.stdout).join("\n\n  ") %>
+              on-success:
+                - notify_finished
+
+            notify_finished:
+              action: core.sendmail
+              input:
+                to: <% $.send_mail_to %>
+                subject: "'[ARTERIA] - Removed archived runfolders'"
+                body: "Finished removing archived runfolders:<pre>\n  <% $.message_body %>\n</pre>"
+
+            oh_shit_error:
+                action: core.sendmail
+                input:
+                    to: <% $.send_mail_to %>
+                    subject: "'[ARTERIA] - OH SHIT ERROR occurred when purging the archive folders'"
+                    body: "An oh shit error occurred when purging the archive folders. Please investigate!"
+                on-complete:
+                  - fail

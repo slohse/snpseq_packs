@@ -60,6 +60,7 @@ workflows:
                 irma_replace_expressions: <% task(get_config).result.result.irma_replace_expressions %>
                 remote_host_key: <% task(get_config).result.result.remote_host_key %>
                 biotank_user_key: <% task(get_config).result.result.biotank_user_key %>
+                biotank_archive_folder: <% task(get_config).result.result.biotank_archive_folder %>
                 samplesheet_fallback_path: <% task(get_config).result.result.samplesheet_fallback_path %>
               on-success:
                  - mark_as_started
@@ -325,6 +326,28 @@ workflows:
             #    url: <% $.ngi_pipeline_url %>/<% $.runfolder_name %>
             ## END START NGI_PIPELINE ##
 
+            ## START CLEANUP ##
+
+            # this is a temporary workaround, the permanent fix is here: https://snpseq.atlassian.net/browse/ART-134
+            remove_from_scratch:
+              action: linux.rm
+              input:
+                hosts: <% $.host %>
+                private_key: <% $.biotank_user_key %>
+                recursive: true
+                target: /data/scratch/<% $.runfolder_name %>
+
+            move_to_archived:
+              with-items: folder in <% list($.runfolder, concat($.runfolder, "_archive")) %>
+              action: linux.mv
+              input:
+                hosts: <% $.host %>
+                source: <% $.folder %>
+                destination: /data/<% $.host %>/<% $.biotank_archive_folder %>
+                private_key: <% $.biotank_user_key %>
+
+            ## END CLEANUP ##
+
             ## NOTIFIER START ###
             notify_finished:
                 action: core.sendmail
@@ -348,6 +371,9 @@ workflows:
                 url: http://<% $.host %>:<% $.runfolder_service_port %>/api/1.0/runfolders/path<% $.runfolder %>
                 body: '{"state": "done"}'
                 method: "POST"
+              on-success:
+                - remove_from_scratch
+                - move_to_archived
 
             mark_as_failed:
               action: core.http
